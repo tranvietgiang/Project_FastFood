@@ -1,0 +1,178 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { Search, ChevronLeft, ChevronDown } from "lucide-react";
+import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
+const popularKeywords = ["pizza", "burger", "gà rán", "combo"];
+
+export default function SearchComponent({ onClose }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [cate, setCate] = useState([]);
+  const [selectCate, setSelectCate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+
+  function onChangeCate(e) {
+    setSelectCate(e);
+  }
+
+  useEffect(() => {
+    if (!selectCate) return;
+    fetch(`http://localhost:8000/api/cate/${encodeURIComponent(selectCate)}`)
+      .then(navigate("/productByCate", { state: { selectedCate: selectCate } }))
+      .catch((e) => console.error("Lỗi khi gọi API:", e));
+  }, [selectCate, navigate]);
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get("http://localhost:8000/api/getCate")
+      .then((res) => {
+        setCate(res.data);
+        setLoading(false);
+        // console.log(res.data);
+      })
+      .catch((e) => console.log("Error", e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() == "") return;
+  }, [searchTerm]);
+
+  function handleSearch() {
+    if (searchTerm.trim() == "") {
+      setError("Vui lòng nhập tên sản phẩm...");
+      return;
+    }
+
+    setError("");
+
+    setTimeout(() => {
+      axios(
+        `http://localhost:8000/api/userInput/${encodeURIComponent(searchTerm)}`
+      )
+        .then(navigate("/userSearch", { state: { searchTemp: searchTerm } }))
+        .catch((e) => {
+          console.log("Error", e);
+        });
+    }, 1000);
+  }
+
+  return (
+    <section className="h-[100vh] w-[350px] fixed top-0 right-0 bg-white shadow-lg z-50 ">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <ChevronLeft
+            onClick={onClose}
+            className="w-6 h-6 text-gray-600 cursor-pointer"
+          />
+          <h2 className="text-xl font-semibold text-gray-800">Tìm kiếm</h2>
+        </div>
+      </div>
+
+      <div className="p-4 border-b border-gray-100">
+        <div className="relative">
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-gray-700">
+              {(loading && (
+                <div className="flex justify-center items-center ">
+                  <ClipLoader size={25} color="#36d7b7" loading={loading} />
+                </div>
+              )) ||
+                selectCate ||
+                "Select Cate"}
+            </span>
+            <ChevronDown
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                showDropdown ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showDropdown && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              {cate.map((e, i) => (
+                <button
+                  onClick={() => {
+                    onChangeCate(e);
+                    setShowDropdown(false);
+                  }}
+                  key={i}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="p-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder={error || "Tìm theo tên sản phẩm..."}
+            className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+          />
+          <button
+            onClick={handleSearch}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-red-500 p-2 rounded-md hover:bg-red-600 transition-colors"
+          >
+            <Search className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Popular Keywords */}
+      <div className="p-4">
+        <h3 className="text-sm font-medium text-gray-800 mb-3">
+          Từ khóa phổ biến
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {popularKeywords.map((keyword, index) => (
+            <button
+              key={index}
+              onClick={() => setSearchTerm(keyword)}
+              className="px-4 py-2 bg-orange-100 text-orange-600 rounded-full text-sm hover:bg-orange-200 transition-colors"
+            >
+              {keyword}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Search Results Area */}
+      <div className="flex-1 p-4">
+        {searchTerm ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500 mb-4">
+              <Search className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p>Tìm kiếm "{searchTerm}"</p>
+              <p className="text-sm mt-1">Nhấn enter để tìm kiếm</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-gray-400">
+              <Search className="w-12 h-12 mx-auto mb-2" />
+              <p>Nhập từ khóa để tìm kiếm</p>
+              <p className="text-sm mt-1">Tìm món ăn yêu thích của bạn</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
