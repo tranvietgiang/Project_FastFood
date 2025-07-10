@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
+import { FaHistory } from "react-icons/fa";
+import { IoCloseSharp } from "react-icons/io5";
+
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
 const popularKeywords = ["pizza", "burger", "gà rán", "combo"];
 
-export default function SearchComponent({ onClose }) {
+export default function SearchComponent({
+  onClose,
+  historySearch,
+  setHistorySearch,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [cate, setCate] = useState([]);
@@ -31,17 +38,12 @@ export default function SearchComponent({ onClose }) {
     axios
       .get("http://localhost:8000/api/getCate")
       .then((res) => {
-        setCate(res.data);
+        setCate(res.data || []);
         setLoading(false);
-        // console.log(res.data);
       })
       .catch((e) => console.log("Error", e))
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    if (searchTerm.trim() == "") return;
-  }, [searchTerm]);
 
   function handleSearch() {
     if (searchTerm.trim() == "") {
@@ -52,14 +54,25 @@ export default function SearchComponent({ onClose }) {
     setError("");
 
     setTimeout(() => {
-      axios(
-        `http://localhost:8000/api/userInput/${encodeURIComponent(searchTerm)}`
-      )
+      saveHistorySearch();
+      axios
+        .get(
+          `http://localhost:8000/api/userInput/${encodeURIComponent(
+            searchTerm
+          )}`
+        )
         .then(navigate("/userSearch", { state: { searchTemp: searchTerm } }))
         .catch((e) => {
           console.log("Error", e);
         });
     }, 1000);
+  }
+
+  function saveHistorySearch() {
+    axios
+      .post("http://localhost:8000/api/history", { history: searchTerm })
+      .then((res) => setHistorySearch(res.data || []))
+      .catch((e) => console.log("Error", e));
   }
 
   return (
@@ -134,6 +147,22 @@ export default function SearchComponent({ onClose }) {
           </button>
         </div>
       </div>
+
+      {historySearch && (
+        <div className="mx-[20px] space-y-2 ">
+          {historySearch.map((e, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between border hover:bg-gray-300 p-2 rounded"
+            >
+              <span className="flex items-center gap-2">
+                <FaHistory /> {e}
+              </span>
+              <IoCloseSharp className="cursor-pointer text-gray-500 hover:text-black" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Popular Keywords */}
       <div className="p-4">

@@ -9,7 +9,6 @@ import { CiShoppingCart } from "react-icons/ci";
 export default function UserSearch() {
   const [userInput, setUserInput] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [eyeHover, setEye] = useState(true);
   const location = useLocation();
   const termSearch = location.state?.searchTemp;
 
@@ -25,7 +24,7 @@ export default function UserSearch() {
     axios
       .get(`http://localhost:8000/api/userInput?input=${termSearch}`)
       .then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         setUserInput(res.data.data || []);
         setLoading(false);
       })
@@ -49,12 +48,13 @@ export default function UserSearch() {
         )}
 
         <ul className="grid grid-cols-5 gap-5 ">
-          <MdOutlineRemoveRedEye className={eyeHover ? "hidden" : ""} />
           {userInput.map((e) => (
             <li
               key={e.product_id}
               className="w-full group block relative overflow-hidden border p-2 rounded shadow hover:shadow-lg transition"
             >
+              <MdOutlineRemoveRedEye className="absolute top-2 right-1 text-xl opacity-0 border border-black group-hover:opacity-100 transition-opacity duration-300 ease-in-out pointer-events-none" />
+
               <Link to="#">
                 <img
                   src={e.product_image}
@@ -63,7 +63,7 @@ export default function UserSearch() {
                 />
                 <h3 className="font-bold mt-2">{e.product_name}</h3>
                 <p>
-                  Giá:{" "}
+                  Giá:
                   <span className="text-red-500 font-bold">
                     {e.product_price} <sub>đ</sub>
                   </span>

@@ -5,12 +5,22 @@ import { useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import SearchComponent from "./Search/Search";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
 
 function Header() {
   const [showSearch, setShowSearch] = useState(false);
 
   const openSearch = () => setShowSearch(true);
   const closeSearch = () => setShowSearch(false);
+  const [historySearch, setHistorySearch] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/history-list")
+      .then((res) => setHistorySearch(res.data || []))
+      .catch((e) => console.log("Lỗi khi load lịch sử:", e));
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -57,7 +67,11 @@ function Header() {
             className="fixed inset-0 bg-black bg-opacity-40 z-40"
             onClick={closeSearch}
           />
-          <SearchComponent onClose={closeSearch} />
+          <SearchComponent
+            onClose={closeSearch}
+            historySearch={historySearch}
+            setHistorySearch={setHistorySearch}
+          />
         </>
       )}
     </header>
