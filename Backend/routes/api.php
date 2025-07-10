@@ -9,8 +9,10 @@ use App\Http\Controllers\ProductController;
 /* Cate */
 
 Route::get('/getCate', [CategorieController::class, 'getCate']);
-Route::get('/cate/{cateSearch}', [FeatureSearchController::class, 'search']);
 
-/*Products */
+/*Feature search */
 Route::get('/product/{cateSearch}', [FeatureSearchController::class, 'searchCate']);
 Route::get('/userInput', [FeatureSearchController::class, 'userSearch']);
+Route::get('/cate/{cateSearch}', [FeatureSearchController::class, 'search']);
+Route::get('/history-list', [FeatureSearchController::class, 'getHistory']);
+Route::post('/history', [FeatureSearchController::class, 'saveHistory']);

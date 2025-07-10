@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categorie;
+use App\Models\History_search;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -37,5 +38,26 @@ class FeatureSearchController extends Controller
         $input = $request->query('input');
         $userInput = Product::where("product_name", "like", "%$input%")->paginate(20);
         return response()->json($userInput);
+    }
+
+    public function saveHistory(Request $request)
+    {
+        $history = $request->history;
+
+        if ($history) {
+            $exists = History_search::where("history_search_name", $history)->first();
+            if (!$exists) {
+                History_search::create(['history_search_name' => $history]);
+            }
+        }
+
+        // Trả về danh sách mới luôn
+        return $this->getHistory();
+    }
+
+    public function getHistory()
+    {
+        $getHistory = History_search::orderBy("created_at", "desc")->limit(5)->pluck('history_search_name');
+        return response()->json($getHistory);
     }
 }
