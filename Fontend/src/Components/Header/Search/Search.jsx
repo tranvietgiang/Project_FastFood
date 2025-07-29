@@ -23,15 +23,10 @@ export default function SearchComponent({
   const [error, setError] = useState("");
 
   function onChangeCate(e) {
-    setSelectCate(e);
+    const value = e.target.textContent;
+    setSelectCate(value);
+    navigate("/productByCate", { state: { selectedCate: value } });
   }
-
-  useEffect(() => {
-    if (!selectCate) return;
-    fetch(`http://localhost:8000/api/cate/${encodeURIComponent(selectCate)}`)
-      .then(navigate("/productByCate", { state: { selectedCate: selectCate } }))
-      .catch((e) => console.error("Lỗi khi gọi API:", e));
-  }, [selectCate, navigate]);
 
   useEffect(() => {
     setLoading(true);
@@ -39,6 +34,7 @@ export default function SearchComponent({
       .get("http://localhost:8000/api/getCate")
       .then((res) => {
         setCate(res.data || []);
+        // console.log(res.data);
         setLoading(false);
       })
       .catch((e) => console.log("Error", e))
@@ -46,7 +42,7 @@ export default function SearchComponent({
   }, []);
 
   function handleSearch() {
-    if (searchTerm.trim() == "") {
+    if (searchTerm.trim() === "") {
       setError("Vui lòng nhập tên sản phẩm...");
       return;
     }
@@ -55,17 +51,11 @@ export default function SearchComponent({
 
     setTimeout(() => {
       saveHistorySearch();
-      axios
-        .get(
-          `http://localhost:8000/api/userInput/${encodeURIComponent(
-            searchTerm
-          )}`
-        )
-        .then(navigate("/userSearch", { state: { searchTemp: searchTerm } }))
-        .catch((e) => {
-          console.log("Error", e);
-        });
+
+      navigate("/userSearch", { state: { searchTemp: searchTerm } });
     }, 1000);
+
+    setSearchTerm("");
   }
 
   function saveHistorySearch() {
@@ -73,6 +63,36 @@ export default function SearchComponent({
       .post("http://localhost:8000/api/history", { history: searchTerm })
       .then((res) => setHistorySearch(res.data || []))
       .catch((e) => console.log("Error", e));
+  }
+
+  function handleDelete(e) {
+    axios
+      .delete(`http://localhost:8000/api/delete/${encodeURIComponent(e)}`)
+      .then((res) => {
+        setHistorySearch(res.data);
+        console.log("thành công!");
+      })
+      .catch((e) => {
+        if (e.status === "500") {
+          navigate("/notFile");
+        } else {
+          console.log("Error", e);
+        }
+      });
+  }
+
+  function handleHistory(event) {
+    const data = event.target.textContent;
+
+    fetch(`http://localhost:8000/api/historySearch/${encodeURIComponent(data)}`)
+      .then(async (res) => {
+        if (res.status === 404) {
+          navigate("/notFile");
+          return;
+        }
+        navigate("/userSearch", { state: { dataHistory: data } });
+      })
+      .catch((e) => console.log("error", e));
   }
 
   return (
@@ -113,11 +133,11 @@ export default function SearchComponent({
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
               {cate.map((e, i) => (
                 <button
-                  onClick={() => {
-                    onChangeCate(e);
+                  key={i}
+                  onClick={(event) => {
+                    onChangeCate(event);
                     setShowDropdown(false);
                   }}
-                  key={i}
                   className="w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg transition-colors"
                 >
                   {e}
@@ -156,9 +176,15 @@ export default function SearchComponent({
               className="flex items-center justify-between border hover:bg-gray-300 p-2 rounded"
             >
               <span className="flex items-center gap-2">
-                <FaHistory /> {e}
+                <FaHistory />{" "}
+                <span onClick={(event) => handleHistory(event)}>
+                  {e.history_search_name}
+                </span>
               </span>
-              <IoCloseSharp className="cursor-pointer text-gray-500 hover:text-black" />
+              <IoCloseSharp
+                onClick={() => handleDelete(e.history_search_id)}
+                className="cursor-pointer text-gray-500 hover:text-black"
+              />
             </div>
           ))}
         </div>

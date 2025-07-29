@@ -2,37 +2,66 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { TiTickOutline } from "react-icons/ti";
 import { CiShoppingCart } from "react-icons/ci";
+import { Paginate } from "../Paginate/Paginate";
 
 export default function UserSearch() {
   const [userInput, setUserInput] = useState([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const termSearch = location.state?.searchTemp;
+  const selectedHistory = location.state?.dataHistory;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
 
   useEffect(() => {
+    if (!termSearch || termSearch.trim() === "") return;
+
+    console.log(termSearch);
     setLoading(true);
-
-    if (!termSearch || termSearch.trim() === "") {
-      setUserInput([]);
-      setLoading(false);
-      return;
-    }
-
+    axios;
     axios
-      .get(`http://localhost:8000/api/userInput?input=${termSearch}`)
+      .get(
+        `http://localhost:8000/api/userInput?input=${encodeURIComponent(
+          termSearch
+        )}`
+      )
       .then((res) => {
-        // console.log(res.data);
         setUserInput(res.data.data || []);
+        setLastPage(res.last_page);
         setLoading(false);
       })
       .catch((e) => {
-        setLoading(true);
-        console.log("error call api", e);
+        setLoading(false);
+        console.error("Error:", e);
       });
-  }, [termSearch]);
+  }, [termSearch, navigate]);
+
+  useEffect(() => {
+    if (!selectedHistory || selectedHistory.trim() === "") return;
+
+    setLoading(true);
+
+    axios
+      .get(
+        `http://localhost:8000/api/product/history/${encodeURIComponent(
+          selectedHistory
+        )}`
+      )
+      .then((res) => {
+        setUserInput(res.data.data || []);
+        setLastPage(res.last_page);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setLoading(false);
+
+        console.error("Error history term:", e);
+      });
+  }, [selectedHistory, navigate]);
 
   return (
     <>
@@ -47,7 +76,7 @@ export default function UserSearch() {
           </p>
         )}
 
-        <ul className="grid grid-cols-5 gap-5 ">
+        <ul className="grid grid-cols-5 gap-5  ">
           {userInput.map((e) => (
             <li
               key={e.product_id}
@@ -57,7 +86,7 @@ export default function UserSearch() {
 
               <Link to="#">
                 <img
-                  src={e.product_image}
+                  src={`/Images/MiY/${e.product_image}`}
                   className="mx-auto object-cover w-[173px] h-[173px]"
                   alt=""
                 />
@@ -89,6 +118,13 @@ export default function UserSearch() {
             </li>
           ))}
         </ul>
+        {lastPage && (
+          <Paginate
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            last_page={lastPage}
+          />
+        )}
       </section>
     </>
   );

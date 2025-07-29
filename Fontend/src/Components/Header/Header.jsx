@@ -7,6 +7,8 @@ import SearchComponent from "./Search/Search";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import axios from "axios";
+import HandleTop from "../Features/Handle/HandleTop";
+import Call_center from "../Features/Call_center/Call_center";
 
 function Header() {
   const [showSearch, setShowSearch] = useState(false);
@@ -18,7 +20,9 @@ function Header() {
   useEffect(() => {
     axios
       .get("http://localhost:8000/api/history-list")
-      .then((res) => setHistorySearch(res.data || []))
+      .then((res) => {
+        setHistorySearch(res.data || []);
+      })
       .catch((e) => console.log("Lỗi khi load lịch sử:", e));
   }, []);
 
@@ -39,6 +43,7 @@ function Header() {
 
           {/* Navigation Menu */}
           <Navbar />
+
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1 border-[1px] rounded border-red-500 p-1">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_2px_rgba(239,68,68,0.6)]"></div>
@@ -74,6 +79,9 @@ function Header() {
           />
         </>
       )}
+
+      <HandleTop />
+      <Call_center />
     </header>
   );
 }

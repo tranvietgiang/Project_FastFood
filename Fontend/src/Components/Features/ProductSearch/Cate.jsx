@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -11,6 +11,7 @@ export default function CateSearch() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const selectedCate = location.state?.selectedCate;
+  const navigate = useNavigate();
 
   // Lấy tên danh mục từ localStorage
   useEffect(() => {
@@ -18,6 +19,8 @@ export default function CateSearch() {
       setNameCate(selectedCate);
     }
   }, [selectedCate]);
+
+  console.log(selectedCate);
 
   // Gọi API khi có tên danh mục
   useEffect(() => {
@@ -29,15 +32,17 @@ export default function CateSearch() {
       .get(`http://localhost:8000/api/product/${encodeURIComponent(nameCate)}`)
       .then((res) => {
         setCate(res.data.data); // Laravel paginate -> nằm trong `data.data`
-        console.log(res.data.data);
+        // console.log(res.data.data);
         setLoading(false);
+        setError("");
       })
       .catch((e) => {
         console.log("error", e);
         setError("Không thể tải dữ liệu.");
+        navigate("/notFile");
         setLoading(false);
       });
-  }, [nameCate]);
+  }, [nameCate, setLoading, navigate]);
 
   return (
     <section className="p-4">

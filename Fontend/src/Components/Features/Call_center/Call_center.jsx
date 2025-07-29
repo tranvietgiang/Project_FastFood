@@ -24,7 +24,7 @@ export default function Call_center() {
 
   return (
     <>
-      <section className="fixed top-[80%] right-[30px]">
+      <section className="fixed top-[80%] right-[15px] z-[999]">
         <div className="bg-red-500 w-[45px] h-[45px] rounded-full flex justify-center items-center">
           <img
             onClick={handleHidden}

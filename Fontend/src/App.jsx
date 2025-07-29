@@ -6,6 +6,7 @@ import Footer from "./Components/Footer/Footer";
 import Call_center from "./Components/Features/Call_center/Call_center";
 import SearchByCate from "./Components/Features/ProductSearch/Cate";
 import UserSearch from "./Components/Features/ProductSearch/UserSearch";
+import NotFound from "./Components/Features/NotFound/NotFound";
 
 function App() {
   return (
@@ -17,7 +18,6 @@ function App() {
             element={
               <>
                 <Header />
-                <Call_center />
                 <Content />
                 <Footer />
               </>
@@ -44,6 +44,7 @@ function App() {
               </>
             }
           />
+          <Route path="/notFile" element={<NotFound />} />
         </Routes>
       </div>
     </Router>
