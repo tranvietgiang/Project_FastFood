@@ -37,6 +37,7 @@ export default function CateSearch() {
         setError("");
       })
       .catch((e) => {
+        setCate([]);
         console.log("error", e);
         setError("Không thể tải dữ liệu.");
         navigate("/notFile");

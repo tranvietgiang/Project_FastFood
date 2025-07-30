@@ -29,6 +29,7 @@ export default function Section_1() {
         setError("");
       })
       .catch((e) => {
+        setCoupon([]);
         console.log("error", e);
         setError("Phiếu giảm giá đang bị lỗi, xin lỗi bạn");
       });

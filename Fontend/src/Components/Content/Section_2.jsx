@@ -28,9 +28,10 @@ export default function Section_2() {
     axios
       .get("http://localhost:8000/api/getProduct")
       .then((res) => {
-        setGetProduct(res.data || []);
+        setGetProduct(res.data);
       })
       .catch((e) => {
+        setGetProduct([]);
         setError("Lỗi phía serve!");
         console.log("error", e);
       });
@@ -98,6 +99,7 @@ export default function Section_2() {
                 );
               })}
           </ul>
+
           <div className="relative -top-[350px] sm:-top-[400px] md:-top-[250px] flex justify-between px-4">
             <button
               onClick={handlePrev}
@@ -114,6 +116,14 @@ export default function Section_2() {
               <FaChevronRight />
             </button>
           </div>
+        </div>
+
+        <div>
+          <img
+            className="w-full h-full object-cover mb-[100px]"
+            src="/Images/index/index_slider_2.webp"
+            alt=""
+          />
         </div>
       </section>
     </>

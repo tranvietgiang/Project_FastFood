@@ -22,7 +22,6 @@ export default function UserSearch() {
 
     console.log(termSearch);
     setLoading(true);
-    axios;
     axios
       .get(
         `http://localhost:8000/api/userInput?input=${encodeURIComponent(
@@ -30,11 +29,12 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data || []);
+        setUserInput(res.data.data);
         setLastPage(res.last_page);
         setLoading(false);
       })
       .catch((e) => {
+        setUserInput([]);
         setLoading(false);
         console.error("Error:", e);
       });
@@ -52,11 +52,12 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data || []);
+        setUserInput(res.data.data);
         setLastPage(res.last_page);
         setLoading(false);
       })
       .catch((e) => {
+        setUserInput([]);
         setLoading(false);
 
         console.error("Error history term:", e);
