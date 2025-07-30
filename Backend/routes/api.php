@@ -30,3 +30,4 @@ Route::get("/getCoupon", [CouponsController::class, "getCoupon"]);
 
 /**Product */
 Route::get("/getProduct", [ProductController::class, "getProductSection2"]);
+Route::get("/getProduct3", [ProductController::class, "getProductSection3"]);
