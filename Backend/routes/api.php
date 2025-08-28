@@ -31,3 +31,22 @@ Route::get("/getCoupon", [CouponsController::class, "getCoupon"]);
 /**Product */
 Route::get("/getProduct", [ProductController::class, "getProductSection2"]);
 Route::get("/getProduct3", [ProductController::class, "getProductSection3"]);
+
+/*ShowAll */
+Route::get("/showAll/section", [ProductController::class, "getShowAllSection3"]);
+Route::get("/showAll/section/option", [ProductController::class, "getShowAllSection3Option"]);
+
+/**Chào ngày mới */
+Route::get("/showAll/section4", [ProductController::class, "getProductsSection4"]);
+
+/**Product detail */
+Route::get("/products/detail/by-id/{id}", [ProductController::class, "getProductsDetail"]);
+
+/*Product drin */
+Route::get("/products/drink-together", [ProductController::class, "getDrinkGoTogether"]);
+
+/*Product detail related */
+Route::get("/products/related/by-id/{idDetail}", [ProductController::class, "getProductRelated"]);
+
+/*Product detail user views recently */
+Route::get("/products/view-recently/by-id/{idViewRecently}", [ProductController::class, "getProductViewRecently"]);

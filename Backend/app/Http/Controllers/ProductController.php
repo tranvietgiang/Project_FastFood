@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\RecentlyViewProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -11,10 +13,15 @@ class ProductController extends Controller
     public function getProductSection2()
     {
         $getProducts = Product::orderBy("created_at", "desc")
-            ->select("products.*", "percents.percent_name")
+            ->select("products.*", "percents.percent_name", "categories.cate_name")
             ->join("percents", "products.product_id", "=", "percents.product_id")
             ->where("products.product_discount", "yes")
+            ->join("categories", "products.cate_id", "=", "categories.cate_id")
+            ->where("categories.cate_name", "not like", "%Nước uống%")
             ->get();
+
+
+        // dd($getProducts);
 
 
         if ($getProducts->count() > 1) {
@@ -44,7 +51,7 @@ class ProductController extends Controller
         // Ánh xạ từ tên -> mã
         $messageMap = [
             "Mì ý" => "1",
-            "Bugger" => "2",
+            "Burger" => "2",
             "Pizza" => "3",
         ];
 
@@ -54,5 +61,203 @@ class ProductController extends Controller
             "message" => $message,
             "products" => $getProduct3
         ]);
+    }
+
+
+    public function getShowAllSection3(Request $request)
+    {
+        $data = $request->query("termData");
+
+        $dk = $request->query("getLocation");
+
+        $getProducts  = null;
+
+        $dish = "";
+
+        if ($dk === "Mì ý") {
+            $dish = "Mi Ý";
+        } else if ($dk === "Burger") {
+            $dish = "Burger";
+        } else {
+            $dish = "Pizza";
+        }
+
+
+        switch ($data) {
+            case "default":
+                $getProducts =  Product::where("product_name", "like", "%$dish%")->orderBy("created_at", "desc")->get();
+                break;
+            case "increase":
+                $getProducts =  Product::where("product_name", "like", "%$dish%")->orderBy("product_price")->get();
+                break;
+            case "decrease":
+                $getProducts =  Product::where("product_name", "like", "%$dish%")->orderBy("product_price", "desc")->get();
+                break;
+            case "az":
+                $getProducts =  Product::where("product_name", "like", "%$dish%")->orderBy("product_name")->get();
+                break;
+            case "za":
+                $getProducts =  Product::where("product_name", "like", "%$dish%")->orderBy("product_name", "desc")->get();
+                break;
+            default:
+                return response()->json(["error" => "Tham số không hợp lệ"], 400);
+        }
+
+
+        if ($getProducts && $getProducts->count() > 0) {
+            return response()->json($getProducts);
+        }
+
+
+        return response()->json([""], 500);
+    }
+
+    public function getShowAllSection3Option(Request $request)
+    {
+        $data = $request->query('priceOption');
+        $dk = $request->query('getLocation');
+
+        if (!$data || !$dk) {
+            return response()->json(['message' => 'Thiếu tham số truy vấn'], 400);
+        }
+
+        $getProductOption = null;
+        $dish = "";
+
+
+
+        $price = (int) str_replace(".", "", $data);
+
+
+        if ($dk === "Mì ý") {
+            $dish = "Mì ý";
+        } else if ($dk === "Burger") {
+            $dish = "Burger";
+        } else {
+            $dish = "Pizza";
+        }
+
+        // dd($price, $dish);
+
+        $query = Product::where("product_name", "like", "%$dish%");
+
+
+        if ($price <= 1000000) {
+            $getProductOption =  $query->where("product_price", "<", 1000000)->get();
+        } else if ($price >= 2000000 && $price < 3000000) {
+            $getProductOption =  $query->whereBetween("product_price", [2000000, 3000000])->get();
+        } else if ($price >= 3000000 && $price <= 4000000) {
+            $getProductOption =    $query->whereBetween("product_price", [3000000, 4000000])->get();
+        } else {
+            $getProductOption = $query->where("product_price", ">", 5000000)->get();
+        }
+
+        if ($getProductOption->count() > 0) {
+            return response()->json($getProductOption);
+        }
+
+
+        return response()->json([""], 500);
+    }
+
+    public function getProductsSection4()
+    {
+        $getProducts = Product::orderBy("created_at", "desc")->distinct()->limit(8)
+            ->get();
+        if ($getProducts->count() > 1) {
+
+            return response()->json($getProducts);
+        }
+        return response()->json("", 500);
+    }
+
+    public function getProductsDetail($id)
+    {
+        $getProductDetail = Product::select("products.*", "percents.percent_name")
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->where("products.product_id", $id)->first();
+
+        if ($getProductDetail) {
+            return response()->json($getProductDetail);
+        }
+
+        // if (isset($getProductDetail->percent_name)) 
+
+        return response()->json("", 500);
+    }
+
+    public function getDrinkGoTogether()
+    {
+        $getDrinkTogether = Product::select("products.*", "percents.percent_name")
+            ->join("categories", "products.cate_id", "=", "categories.cate_id")
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->where("cate_name", "like", "%Nước uống%")
+            ->get();
+
+        if ($getDrinkTogether->count() > 1) {
+            return response()->json($getDrinkTogether);
+        }
+
+        return response()->json("", 500);
+    }
+
+    public function getProductRelated($idDetail)
+    {
+        $getCate = Product::where("product_id", $idDetail)->first();
+
+        if ($getCate) {
+            $getProductRelated = Product::select("products.*", "percents.percent_name")
+                ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+                ->where("products.cate_id", $getCate->cate_id)
+                ->where("products.product_id", "<>", $idDetail)
+                ->limit(4)->get();
+
+            if ($getProductRelated->count() < 4) {
+                $missing = 4 - $getProductRelated->count();
+
+                $extraProducts = Product::select("products.*", "percents.percent_name")
+                    ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+                    ->where("products.product_id", "<>", $idDetail)
+                    ->where("products.cate_id", "<>", $getCate->cate_id)
+                    ->inRandomOrder()
+                    ->limit($missing)->get();
+
+                $mergeRelated = $getProductRelated->merge($extraProducts);
+                return response()->json($mergeRelated);
+            }
+        }
+
+        return response()->json([], 200);
+    }
+
+    public function getProductViewRecently($idViewRecently)
+    {
+
+        $exist = Product::where("product_id", $idViewRecently)->exists();
+
+        if ($exist) {
+            RecentlyViewProduct::updateOrCreate(
+                [
+                    "user_id" => 1,
+                    "product_id" => $idViewRecently
+                ],
+                [
+                    'viewed_count' => DB::raw("viewed_count + 1")
+                ]
+            );
+
+            $getRecentlyViewProduct = RecentlyViewProduct::select("recently_view_products.*", "products.*", "percents.percent_name")
+                ->join("products", "recently_view_products.product_id", "=", "products.product_id")
+                ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+                ->where("products.product_id", "<>", $idViewRecently)
+                ->orderBy("recently_view_products.viewed_count", "desc")
+                ->limit(8)->get();
+
+            if ($getRecentlyViewProduct->count() > 0) {
+                return response()->json($getRecentlyViewProduct);
+            }
+        }
+
+        return response()->json([], 200);
     }
 }
