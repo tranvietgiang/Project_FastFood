@@ -63,7 +63,7 @@ class ProductController extends Controller
         ]);
     }
 
-
+    /*git */
     public function getShowAllSection3(Request $request)
     {
         $data = $request->query("termData");
@@ -112,6 +112,7 @@ class ProductController extends Controller
         return response()->json([""], 500);
     }
 
+    /*git */
     public function getShowAllSection3Option(Request $request)
     {
         $data = $request->query('priceOption');
@@ -160,6 +161,7 @@ class ProductController extends Controller
         return response()->json([""], 500);
     }
 
+    /*git */
     public function getProductsSection4()
     {
         $getProducts = Product::orderBy("created_at", "desc")->distinct()->limit(8)
@@ -171,6 +173,7 @@ class ProductController extends Controller
         return response()->json("", 500);
     }
 
+    /*git */
     public function getProductsDetail($id)
     {
         $getProductDetail = Product::select("products.*", "percents.percent_name")
@@ -186,6 +189,7 @@ class ProductController extends Controller
         return response()->json("", 500);
     }
 
+    /*git */
     public function getDrinkGoTogether()
     {
         $getDrinkTogether = Product::select("products.*", "percents.percent_name")
@@ -201,6 +205,7 @@ class ProductController extends Controller
         return response()->json("", 500);
     }
 
+    /*git */
     public function getProductRelated($idDetail)
     {
         $getCate = Product::where("product_id", $idDetail)->first();
@@ -230,6 +235,7 @@ class ProductController extends Controller
         return response()->json([], 200);
     }
 
+    /*git */
     public function getProductViewRecently($idViewRecently)
     {
 
