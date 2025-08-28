@@ -4,15 +4,15 @@ import { Link } from "react-router-dom";
 const menuCall = [
   {
     title: "nt phone",
-    image: "Images/Call_center/addthis-phone.svg",
+    image: "/Images/Call_center/addthis-phone.svg",
   },
   {
     title: "nt zalo",
-    image: "Images/Call_center/addthis-zalo.svg",
+    image: "/Images/Call_center/addthis-zalo.svg",
   },
   {
     title: "nt messenger",
-    image: "Images/Call_center/addthis-messenger.svg",
+    image: "/Images/Call_center/addthis-messenger.svg",
   },
 ];
 export default function Call_center() {

@@ -29,15 +29,24 @@ export default function SearchComponent({
   }
 
   useEffect(() => {
+    const cache_search_cate = localStorage.getItem("cache_search_cate");
+    if (cache_search_cate) {
+      setCate(JSON.parse(cache_search_cate));
+      return;
+    }
+
     setLoading(true);
     axios
       .get("http://localhost:8000/api/getCate")
       .then((res) => {
-        setCate(res.data || []);
-        // console.log(res.data);
+        setCate(res.data);
+        localStorage.setItem("cache_search_cate", JSON.stringify(res.data));
         setLoading(false);
       })
-      .catch((e) => console.log("Error", e))
+      .catch((e) => {
+        console.log("Error", e);
+        setCate([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -70,7 +79,6 @@ export default function SearchComponent({
       .delete(`http://localhost:8000/api/delete/${encodeURIComponent(e)}`)
       .then((res) => {
         setHistorySearch(res.data);
-        console.log("thành công!");
       })
       .catch((e) => {
         if (e.status === "500") {

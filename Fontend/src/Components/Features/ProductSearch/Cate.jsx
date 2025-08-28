@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
+import GetProducts from "../GetProducts/GetProducts";
 
 export default function CateSearch() {
   const [cate, setCate] = useState([]);
@@ -20,8 +21,6 @@ export default function CateSearch() {
     }
   }, [selectedCate]);
 
-  console.log(selectedCate);
-
   // Gọi API khi có tên danh mục
   useEffect(() => {
     if (!nameCate) return;
@@ -32,11 +31,10 @@ export default function CateSearch() {
       .get(`http://localhost:8000/api/product/${encodeURIComponent(nameCate)}`)
       .then((res) => {
         setCate(res.data.data); // Laravel paginate -> nằm trong `data.data`
-        // console.log(res.data.data);
         setLoading(false);
-        setError("");
       })
       .catch((e) => {
+        setError("");
         setCate([]);
         console.log("error", e);
         setError("Không thể tải dữ liệu.");
@@ -46,28 +44,25 @@ export default function CateSearch() {
   }, [nameCate, setLoading, navigate]);
 
   return (
-    <section className="p-4">
+    <section className="p-4 md:max-w-[1400px] mx-auto">
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
+      <p className="bg-white text-center p-3 text-xl font-bold">
+        Kết quả tìm kiếm:
+      </p>
+      <p>
+        <Link onClick={() => navigate(-1)}>Quay lại</Link>
+      </p>
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <ClipLoader size={40} color="#36d7b7" loading={loading} />
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 place-items-center relative gap-x-3">
           {cate.length === 0 ? (
-            <p className="text-center text-gray-500">Không có sản phẩm nào.</p>
+            <p className="text-gray-500">Không có sản phẩm nào.</p>
           ) : (
-            cate.map((e, i) => (
-              <li key={i}>
-                <Link
-                  to="#"
-                  className="block p-2 border rounded hover:bg-gray-100"
-                >
-                  {e.product_name}
-                </Link>
-              </li>
-            ))
+            <GetProducts products={cate} />
           )}
         </ul>
       )}
