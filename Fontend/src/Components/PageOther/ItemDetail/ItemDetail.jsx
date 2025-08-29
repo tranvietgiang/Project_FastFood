@@ -22,6 +22,7 @@ export default function ItemDetail() {
   const lastPage = Math.ceil(drinkTogether.length / itemsPerPage);
   const navigate = useNavigate();
 
+  console.log(id);
   const ClickIncrease = () => {
     setQuantity((pev) => pev + 1);
   };

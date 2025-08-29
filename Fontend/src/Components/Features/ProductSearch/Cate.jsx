@@ -25,12 +25,21 @@ export default function CateSearch() {
   useEffect(() => {
     if (!nameCate) return;
 
+    const cache_search_cate = localStorage.getItem("cache_search_cate");
+    if (cache_search_cate) {
+      setCate(JSON.parse(cache_search_cate));
+    }
+
     setLoading(true);
 
     axios
       .get(`http://localhost:8000/api/product/${encodeURIComponent(nameCate)}`)
       .then((res) => {
         setCate(res.data.data); // Laravel paginate -> nằm trong `data.data`
+        localStorage.setItem(
+          "cache_search_cate",
+          JSON.stringify(res.data.data)
+        );
         setLoading(false);
       })
       .catch((e) => {
@@ -58,7 +67,7 @@ export default function CateSearch() {
           <ClipLoader size={40} color="#36d7b7" loading={loading} />
         </div>
       ) : (
-        <ul className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 place-items-center relative gap-x-3">
+        <ul className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 place-items-center relative gap-x-10">
           {cate.length === 0 ? (
             <p className="text-gray-500">Không có sản phẩm nào.</p>
           ) : (

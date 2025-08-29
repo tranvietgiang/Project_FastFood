@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 export default function ProductRelated({ idDetailRelated }) {
   const [getProducts, setGetProducts] = useState([]);
 
+  // console.log(getProducts);
+
   useEffect(() => {
     if (!idDetailRelated) {
       return;

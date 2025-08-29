@@ -9,16 +9,15 @@ import { FiHeart } from "react-icons/fi";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
-import styled from "styled-components";
 import HandleIconEffect from "../Features/Handle/HandleIconEffect";
 
 export default function Section_2() {
   const [getProduct, setGetProduct] = useState([]);
   const [error, setError] = useState("");
   const [startIndex, setStartIndex] = useState(0);
-
   const itemsPerPage = 4;
 
+  // console.log(getProduct);
   const handlePrev = () => {
     setStartIndex((prev) => Math.max(prev - itemsPerPage, 0));
   };
@@ -48,41 +47,13 @@ export default function Section_2() {
       });
   }, []);
 
-  const IConWrapper = styled.div`
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-
-    &::after {
-      content: "${(props) => props.label}";
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 2px 6px;
-      font-size: 12px;
-      border-radius: 4px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      margin-top: 4px;
-      white-space: nowrap;
-    }
-
-    &:hover::after {
-      opacity: 1;
-    }
-  `;
-
   return (
     <>
       <section className="md:w-[1400px] mx-auto mt-4 px-4">
         <h2 className="text-4xl flex space-x-5  items-center font-bold">
           <AiFillThunderbolt className="text-yellow-500 opacity-50" /> Khuyến
           mãi Online
-        </h2>{" "}
+        </h2>
         <div className="flex gap-2 mb-3 mt-4">
           <button className="px-4 py-1 border border-gray-400 rounded hover:bg-gray-100">
             Tất cả Khuyến mãi
@@ -93,6 +64,11 @@ export default function Section_2() {
             {error && <div>{error}</div>}
 
             {getProduct
+              .filter(
+                (item, index, arr) =>
+                  index ===
+                  arr.findIndex((p) => p.product_id === item.product_id)
+              )
               .slice(startIndex, startIndex + itemsPerPage)
               .map((e, i) => {
                 const priceNew = e.product_price * (1 - e.percent_name / 100);
@@ -104,30 +80,31 @@ export default function Section_2() {
                     >
                       {/* Action Buttons */}
                       <div
-                        className="absolute top-4 right-4 flex flex-col gap-2 transform translate-x-full 
-                        opacity-0 group-hover:translate-x-0 group-hover:opacity-100 
-                        transition-all duration-300 ease-out z-10"
+                        className="absolute top-4 right-4 flex flex-col gap-2 
+                        transform translate-x-full opacity-0 
+                        group-hover:translate-x-0 group-hover:opacity-100 
+                        transition-all duration-300 ease-out z-10 overflow-visible"
                       >
                         <HandleIconEffect
                           icon={FiHeart}
                           tooltip="Yêu thích"
-                          gradientFrom="red-500"
-                          gradientTo="pink-500"
-                          groupName="heart"
+                          gradientFrom="from-red-500"
+                          gradientTo="to-pink-500"
+                          groupName="group/heart"
                         />
                         <HandleIconEffect
                           icon={AiOutlineEye}
                           tooltip="Xem nhanh"
-                          gradientFrom="blue-500"
-                          gradientTo="cyan-500"
-                          groupName="eye"
+                          gradientFrom="from-blue-500"
+                          gradientTo="to-cyan-500"
+                          groupName="group/eye"
                         />
                         <HandleIconEffect
                           icon={IoIosGitCompare}
                           tooltip="So sánh"
-                          gradientFrom="green-500"
-                          gradientTo="emerald-500"
-                          groupName="compare"
+                          gradientFrom="from-green-500"
+                          gradientTo="to-emerald-500"
+                          groupName="group/compare"
                         />
                       </div>
                       <Link
@@ -152,12 +129,16 @@ export default function Section_2() {
                           <FaStar className="mx-auto text-yellow-500 " />
                         </span>
                         <p className="text-red-500">
-                          <span>
-                            {priceNew.toLocaleString()}
-                            <sub>
-                              <u>đ</u>
-                            </sub>
-                          </span>
+                          {e.percent_name ? (
+                            <span>
+                              {priceNew.toLocaleString()}
+                              <sub>
+                                <u>đ</u>
+                              </sub>
+                            </span>
+                          ) : (
+                            ""
+                          )}
                           <span className="text-black opacity-45 block text-sm">
                             <del>
                               {Number(e.product_price).toLocaleString() ?? ""}{" "}
@@ -165,9 +146,20 @@ export default function Section_2() {
                             </del>
                           </span>
                         </p>
-                        <button className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto mt-3 hover:bg-red-600 duration-300 transition-color">
-                          Tùy chọn <IoIosOptions />
-                        </button>
+                        <p className="relative z-[1000]  mt-3">
+                          {e.product_variant_name ? (
+                            <button className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto  hover:bg-red-600 duration-300 transition-color">
+                              Tùy chọn <IoIosOptions />
+                            </button>
+                          ) : (
+                            <button className="bg-red-500 text-white p-1 px-3 rounded-md  hover:bg-red-700">
+                              <span className="flex items-center justify-center gap-2">
+                                Đặt Ngay
+                                <IoIosOptions className="w-4 h-4" />
+                              </span>
+                            </button>
+                          )}
+                        </p>
                       </Link>
                     </li>
                   </>
