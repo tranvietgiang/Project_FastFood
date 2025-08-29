@@ -12,16 +12,21 @@ class ProductController extends Controller
 
     public function getProductSection2()
     {
-        $getProducts = Product::orderBy("created_at", "desc")
-            ->select("products.*", "percents.percent_name", "categories.cate_name")
+        $getProducts = Product::orderBy("products.created_at", "desc")
+            ->select(
+                "products.*",
+                "percents.percent_name",
+                "categories.cate_name",
+                "product_variants.product_id as product_variant_fk_id",
+                "product_variants.product_variant_name",
+                "product_variants.product_variant_price",
+            )
             ->join("percents", "products.product_id", "=", "percents.product_id")
-            ->where("products.product_discount", "yes")
+            ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
             ->join("categories", "products.cate_id", "=", "categories.cate_id")
+            ->where("products.product_discount", "yes")
             ->where("categories.cate_name", "not like", "%Nước uống%")
             ->get();
-
-
-        // dd($getProducts);
 
 
         if ($getProducts->count() > 1) {
@@ -32,6 +37,7 @@ class ProductController extends Controller
             "message" => "Error backend",
         ], 500);
     }
+
 
     public function getProductSection3(Request $request)
     {
@@ -210,20 +216,38 @@ class ProductController extends Controller
     {
         $getCate = Product::where("product_id", $idDetail)->first();
 
+        // dd($getCate);
         if ($getCate) {
-            $getProductRelated = Product::select("products.*", "percents.percent_name")
+            $getProductRelated = Product::select(
+                "products.*",
+                "percents.percent_name",
+                "product_variants.product_id as product_variant_fk_id",
+                "product_variants.product_variant_name",
+                "product_variants.product_variant_price"
+            )
                 ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+                ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
                 ->where("products.cate_id", $getCate->cate_id)
                 ->where("products.product_id", "<>", $idDetail)
                 ->limit(4)->get();
 
-            if ($getProductRelated->count() < 4) {
-                $missing = 4 - $getProductRelated->count();
 
-                $extraProducts = Product::select("products.*", "percents.percent_name")
+            $result = $getProductRelated->unique('product_id')->values(); // loại bỏ duplicate theo product_id
+
+            if ($result->count() < 4) {
+                $missing = 4 - $result->count();
+
+                $extraProducts = Product::select(
+                    "products.*",
+                    "percents.percent_name",
+                    "product_variants.product_id as product_variant_fk_id",
+                    "product_variants.product_variant_name",
+                    "product_variants.product_variant_price"
+                )
                     ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
-                    ->where("products.product_id", "<>", $idDetail)
+                    ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
                     ->where("products.cate_id", "<>", $getCate->cate_id)
+                    ->where("products.product_id", "<>", $idDetail)
                     ->inRandomOrder()
                     ->limit($missing)->get();
 
@@ -232,7 +256,7 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json([], 200);
+        return response()->json([], 404);
     }
 
     /*git */
