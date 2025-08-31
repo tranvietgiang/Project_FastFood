@@ -170,8 +170,21 @@ class ProductController extends Controller
     /*git */
     public function getProductsSection4()
     {
-        $getProducts = Product::orderBy("created_at", "desc")->distinct()->limit(8)
-            ->get();
+        $getProducts = Product::orderBy("products.created_at", "desc")->distinct()
+            ->select(
+                "products.*",
+                "percents.percent_name",
+                "product_variants.product_id as product_variant_fk_id",
+                "product_variants.product_variant_name",
+                "product_variants.product_variant_price"
+            )
+            ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->limit(100)->get()
+            ->unique("product_id")
+            ->values()
+            ->take(8);
+
         if ($getProducts->count() > 1) {
 
             return response()->json($getProducts);
@@ -182,15 +195,40 @@ class ProductController extends Controller
     /*git */
     public function getProductsDetail($id)
     {
-        $getProductDetail = Product::select("products.*", "percents.percent_name")
+        $getProductDetail = Product::select(
+            "products.*",
+            "percents.percent_name",
+            "product_variants.product_id as product_variant_fk_id",
+            "product_variants.product_variant_name",
+            "product_variants.product_variant_price"
+        )
             ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
+
             ->where("products.product_id", $id)->first();
 
-        if ($getProductDetail) {
+        if (isset($getProductDetail->product_variant_name)) {
+            $getProductVariant = Product::select(
+                "products.*",
+                "percents.percent_name",
+                "product_variants.product_id as product_variant_fk_id",
+                "product_variants.product_variant_name",
+                "product_variants.product_variant_price"
+            )
+                ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+                ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
+                ->where("products.product_id", $id)->get();
+
+            return response()->json([
+                "first" => $getProductDetail,
+                "variants" => $getProductVariant
+            ], 200);
+        } else {
             return response()->json($getProductDetail);
         }
 
-        // if (isset($getProductDetail->percent_name)) 
+        // dd($getProductDetail, $getProductVariant);
+
 
         return response()->json("", 500);
     }
@@ -276,12 +314,23 @@ class ProductController extends Controller
                 ]
             );
 
-            $getRecentlyViewProduct = RecentlyViewProduct::select("recently_view_products.*", "products.*", "percents.percent_name")
-                ->join("products", "recently_view_products.product_id", "=", "products.product_id")
+            $getRecentlyViewProduct = RecentlyViewProduct::select(
+                "recently_view_products.*",
+                "products.*",
+                "percents.percent_name",
+                "product_variants.product_id as product_variant_fk_id",
+                "product_variants.product_variant_name",
+                "product_variants.product_variant_price"
+            )
+                ->join("products", "recently_view_products.product_id", "=", "products.product_id")->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
                 ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
                 ->where("products.product_id", "<>", $idViewRecently)
                 ->orderBy("recently_view_products.viewed_count", "desc")
-                ->limit(8)->get();
+                ->limit(20)->get()
+                ->unique('product_id')
+                ->values()             // reset index 0,1,2...
+                ->take(8);
+
 
             if ($getRecentlyViewProduct->count() > 0) {
                 return response()->json($getRecentlyViewProduct);
