@@ -28,7 +28,7 @@ export default function RecentlyViews({ idViewRecently }) {
 
   return (
     <>
-      <div className="relative w-full">
+      <div className="relative text-center">
         <h1 className="font-semibold text-2xl mt-10  mb-3 md:text-[40px] text-center md:mt-[120px] md:mb-[80px]">
           Sản phẩm đã xem
         </h1>
@@ -52,7 +52,7 @@ export default function RecentlyViews({ idViewRecently }) {
             scrollbarWidth: "none", // Firefox
             msOverflowStyle: "none", // IE 10+
           }}
-          className="flex place-content-center gap-2 overflow-x-auto scroll-smooth mt-[20px] md:mt-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-x-visible cursor-grab"
+          className="flex place-content-center place-items-center gap-2 overflow-x-auto scroll-smooth mt-[20px] md:mt-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-x-visible cursor-grab"
         >
           <GetProducts products={getProduct} />
         </ul>

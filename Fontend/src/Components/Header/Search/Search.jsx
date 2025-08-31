@@ -32,7 +32,6 @@ export default function SearchComponent({
     const cache_search_cate = localStorage.getItem("cache_search_cate");
     if (cache_search_cate) {
       setCate(JSON.parse(cache_search_cate));
-      return;
     }
 
     setLoading(true);
