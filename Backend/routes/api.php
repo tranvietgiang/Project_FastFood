@@ -4,10 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\CouponsController;
+use App\Http\Controllers\FeatureAddController;
 use App\Http\Controllers\FeatureDeleteController;
 use App\Http\Controllers\FeatureSearchController;
 use App\Http\Controllers\ProductController;
-
 
 /*Feature search */
 
@@ -50,3 +50,15 @@ Route::get("/products/related/by-id/{idDetail}", [ProductController::class, "get
 
 /*Product detail user views recently */
 Route::get("/products/view-recently/by-id/{idViewRecently}", [ProductController::class, "getProductViewRecently"]);
+
+/*Find-add-Compare */
+Route::get("/products/add-compare/by-id/{compareId}", [FeatureAddController::class, "AddCompareId"]);
+
+/*Delete compare */
+Route::get("/products/delete-compare/by-id/{compareId}/{userId}", [FeatureDeleteController::class, "deleteCompareId"]);
+
+/*Delete compare-all */
+Route::get("/products/delete-compare-all/by-id/{userId}", [FeatureDeleteController::class, "deleteCompareAll"]);
+
+/*Ingredients compare-all*/
+Route::get("/products/compare-ingredients/by-id/{userId}", [ProductController::class, "compareIngredients"]);

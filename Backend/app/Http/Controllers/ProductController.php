@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductCompare;
 use App\Models\RecentlyViewProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,8 +44,17 @@ class ProductController extends Controller
     {
         $term = $request->query('termData');
 
-        $getProduct3 = Product::where("product_name", "like", "%$term%")
-            ->orderBy("created_at", "desc")
+        $getProduct3 = Product::select(
+            "products.*",
+            "percents.percent_name",
+            "product_variants.product_id as product_variant_fk_id",
+            "product_variants.product_variant_name",
+            "product_variants.product_variant_price"
+        )
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
+            ->where("products.product_name", "like", "%$term%")
+            ->orderBy("products.created_at", "desc")->distinct()
             ->limit(10)
             ->get();
 
@@ -338,5 +348,22 @@ class ProductController extends Controller
         }
 
         return response()->json([], 200);
+    }
+
+
+    public function compareIngredients($userId)
+    {
+        $getCompareIngredients =
+            ProductCompare::select("product_compares.*", "products.*", "percents.percent_name")
+            ->Join("products", "product_compares.product_id", "=", "products.product_id")
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->where("product_compares.user_id", $userId)
+            ->orderBy("product_compares.created_at", "asc")
+            ->limit(3)->get();
+
+        // dd($getCompareIngredients);
+        if ($getCompareIngredients->count() > 0) {
+            return response()->json($getCompareIngredients);
+        }
     }
 }
