@@ -9,14 +9,19 @@ import NotFound from "./Components/Features/NotFound/NotFound";
 import Section_1 from "./Components/Content/Section_1";
 import ShowAllSection_3 from "./Components/PageOther/ShowAllSection3";
 import ItemDetail from "./Components/PageOther/ItemDetail/ItemDetail";
-
+import CompareIngredients from "./Components/PageOther/CompareIngredients";
+import Login from "./Components/PageOther/Auth/Login";
+import Register from "./Components/PageOther/Auth/Register";
+import Verify from "./Components/PageOther/Auth/Email/Verify";
+import User from "./Components/PageOther/Users/User";
+import InformationOrders from "./Components/PageOther/informationOrders";
 function App() {
   return (
     <Router>
       <div style={{ background: "#f4f1ea" }}>
         <Routes>
           <Route
-            path="/"
+            path="/fast.foods"
             element={
               <>
                 <Header />
@@ -72,6 +77,59 @@ function App() {
               </>
             }
           />
+
+          <Route
+            path="/compare/ingredients"
+            element={
+              <>
+                <Header />
+                <CompareIngredients />
+                <Footer />
+              </>
+            }
+          />
+
+          <Route
+            path="auth/login"
+            element={
+              <>
+                <Header />
+                <Login />
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="auth/register"
+            element={
+              <>
+                <Header />
+                <Register />
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="auth/otp"
+            element={
+              <>
+                <Header />
+                <Verify />
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="/user"
+            element={
+              <>
+                <Header />
+                <User />
+                <Footer />
+              </>
+            }
+          />
+          <Route path="/information-orders" element={<InformationOrders />} />
         </Routes>
       </div>
     </Router>
