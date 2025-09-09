@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('history_searchs', function (Blueprint $table) {
             $table->id('history_search_id');
             $table->string('history_search_name');
+            $table->foreignId("user_id")->constrained("users", "id")->onDelete("cascade");
             $table->timestamps();
         });
     }

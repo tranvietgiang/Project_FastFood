@@ -22,7 +22,6 @@ export default function UserSearch() {
 
     console.log(termSearch);
     setLoading(true);
-    axios;
     axios
       .get(
         `http://localhost:8000/api/userInput?input=${encodeURIComponent(
@@ -30,11 +29,12 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data || []);
+        setUserInput(res.data.data);
         setLastPage(res.last_page);
         setLoading(false);
       })
       .catch((e) => {
+        setUserInput([]);
         setLoading(false);
         console.error("Error:", e);
       });
@@ -52,11 +52,12 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data || []);
+        setUserInput(res.data.data);
         setLastPage(res.last_page);
         setLoading(false);
       })
       .catch((e) => {
+        setUserInput([]);
         setLoading(false);
 
         console.error("Error history term:", e);
@@ -65,7 +66,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <section className="container mx-auto m-[50px]">
+      <section className="md:w-[1400px] mx-auto m-[50px]">
         {(loading && (
           <div className="text-center flex justify-center mt-[100px]">
             <ClipLoader size={40} color="#36d7b7" loading={loading} />
@@ -86,15 +87,17 @@ export default function UserSearch() {
 
               <Link to="#">
                 <img
-                  src={`/Images/MiY/${e.product_image}`}
+                  src={`/Images/x/${e.product_image}`}
                   className="mx-auto object-cover w-[173px] h-[173px]"
                   alt=""
                 />
-                <h3 className="font-bold mt-2">{e.product_name}</h3>
+                <h3 className="font-bold mt-2 truncate">
+                  {e.product_name ?? ""}
+                </h3>
                 <p>
                   Giá:
-                  <span className="text-red-500 font-bold">
-                    {e.product_price} <sub>đ</sub>
+                  <span className="text-red-500 font-bold px-2">
+                    {Number(e.product_price).toLocaleString()} <sub>đ</sub>
                   </span>
                 </p>
                 <p className="flex">

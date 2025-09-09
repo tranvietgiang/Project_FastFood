@@ -10,7 +10,7 @@ class CouponsController extends Controller
     //
     public function getCoupon()
     {
-        $getCoupons = Coupon::orderBy("created_at", "desc")->limit(4)->get();
+        $getCoupons = Coupon::orderBy("updated_at", "desc")->limit(4)->get();
         if ($getCoupons->count() > 1) {
 
             return response()->json($getCoupons);

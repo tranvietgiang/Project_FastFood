@@ -12,10 +12,22 @@ import Call_center from "../Features/Call_center/Call_center";
 
 function Header() {
   const [showSearch, setShowSearch] = useState(false);
-
   const openSearch = () => setShowSearch(true);
   const closeSearch = () => setShowSearch(false);
   const [historySearch, setHistorySearch] = useState([]);
+  const [fixed, setFixed] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setFixed(true);
+      } else {
+        setFixed(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [fixed]);
 
   useEffect(() => {
     axios
@@ -27,7 +39,11 @@ function Header() {
   }, []);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header
+      className={`bg-white shadow-sm border-b border-gray-200 ${
+        fixed ? "fixed w-[100%] top-0 z-[999]" : ""
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/">

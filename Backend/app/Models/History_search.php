@@ -14,6 +14,7 @@ class History_search extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'history_search_name'
+        'history_search_name',
+        "user_id"
     ];
 }

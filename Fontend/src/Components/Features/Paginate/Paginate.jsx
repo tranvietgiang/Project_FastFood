@@ -17,7 +17,11 @@ export function Paginate({ currentPage, setCurrentPage, lastPage }) {
         <button
           onClick={pagePrev}
           disabled={currentPage === 1}
-          className="px-3 py-1 border bg-gray-200 hover:bg-gray-300"
+          className={`px-3 py-1 border  ${
+            currentPage === 1
+              ? "bg-gray-200 hover:bg-gray-300"
+              : "hover:bg-blue-500 bg-blue-600"
+          }`}
         >
           Prev
         </button>
@@ -29,7 +33,11 @@ export function Paginate({ currentPage, setCurrentPage, lastPage }) {
         <button
           onClick={pageNext}
           disabled={currentPage === lastPage}
-          className="px-3 py-1 border bg-gray-200 hover:bg-gray-300"
+          className={`px-3 py-1 border  ${
+            currentPage === lastPage
+              ? "bg-gray-200 hover:bg-gray-300"
+              : "hover:bg-blue-500 bg-blue-600"
+          }`}
         >
           Next
         </button>
