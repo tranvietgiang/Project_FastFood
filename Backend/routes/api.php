@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategorieController;
@@ -9,8 +10,12 @@ use App\Http\Controllers\FeatureDeleteController;
 use App\Http\Controllers\FeatureSearchController;
 use App\Http\Controllers\ProductController;
 
-/*Feature search */
+/**Auth */
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/otp', [AuthController::class, 'verifyOtp']);
 
+/*Feature search */
 Route::get('/product/{cateSearch}', [FeatureSearchController::class, 'searchCate']);
 Route::get('/userInput', [FeatureSearchController::class, 'userSearch']);
 Route::get('/cate/{cateSearch}', [FeatureSearchController::class, 'search']);
@@ -62,3 +67,15 @@ Route::get("/products/delete-compare-all/by-id/{userId}", [FeatureDeleteControll
 
 /*Ingredients compare-all*/
 Route::get("/products/compare-ingredients/by-id/{userId}", [ProductController::class, "compareIngredients"]);
+
+/* Get Discount*/
+Route::get("/getDiscount", [ProductController::class, "getDiscount"]);
+
+/* user enter code discount price final*/
+Route::get("/enter-the-coupon/{code}", [ProductController::class, "enterTheCoupon"]);
+
+/* insert code coupon*/
+Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAddController::class, 'insertCouponUser']);
+
+/* insert code coupon*/
+Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);

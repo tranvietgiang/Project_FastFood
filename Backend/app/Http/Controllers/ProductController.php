@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
+use App\Models\CouponUser;
 use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\RecentlyViewProduct;
@@ -365,5 +367,36 @@ class ProductController extends Controller
         if ($getCompareIngredients->count() > 0) {
             return response()->json($getCompareIngredients);
         }
+    }
+
+    public function getDiscount()
+    {
+        $getDiscount = Coupon::all();
+        if ($getDiscount->count() > 1) {
+            return response()->json($getDiscount);
+        }
+        return response()->json([], 400);
+    }
+
+    public function enterTheCoupon($code)
+    {
+        $getCode = Coupon::where("coupon_id", $code)->first();
+        if ($getCode) {
+            return response()->json($getCode);
+        }
+        return response()->json([], 400);
+    }
+
+    public function getCouponUser()
+    {
+        $getListCoupon = CouponUser::orderBy("created_at", "desc")->get();
+        // dd($getListCoupon);
+        if ($getListCoupon->count() > 0) {
+            return response()->json([
+                "list" =>    $getListCoupon,
+                "count" => $getListCoupon->count()
+            ]);
+        }
+        return response()->json([], 400);
     }
 }
