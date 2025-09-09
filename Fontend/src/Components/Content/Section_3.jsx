@@ -2,14 +2,18 @@ import { Link } from "react-router-dom";
 import { CiStar } from "react-icons/ci";
 import { IoIosOptions } from "react-icons/io";
 import { FaAngleRight } from "react-icons/fa6";
+import { MdOutlineShoppingCartCheckout } from "react-icons/md";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { ModelProduct } from "../PageOther/ModelProduct";
 
 export default function Section_3() {
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
   const [statePage, setStatePage] = useState("");
   const [termData, setTermData] = useState("Mì ý");
+  const [modelOpen, setModelOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     if (!termData) return;
@@ -79,46 +83,86 @@ export default function Section_3() {
           <div className="">
             {error && <div>{error}</div>}
             <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-5 p-4 place-items-center">
-              {products.map((e, i) => {
-                return (
-                  <>
-                    <li key={i} className="group">
-                      <Link
-                        state={{ id: e.product_id }}
-                        to={`/item/detail/${encodeURIComponent(e.slug)}`}
-                        className="flex items-center justify-center space-x-5"
-                      >
-                        <img
-                          className="sm:w-[80px] md:w-[120px] lg:w-[150px] w-[70px] h-auto object-cover inline"
-                          src={`/Images/x/${e.product_image}`}
-                          alt=""
-                        />
+              {products
+                .filter(
+                  (item, index, arr) =>
+                    index ===
+                    arr.findIndex((e) => e.product_id === item.product_id)
+                )
+                .map((e, i) => {
+                  return (
+                    <>
+                      <li key={i} className="group">
+                        <Link
+                          state={{ id: e.product_id }}
+                          to={`/item/detail/${encodeURIComponent(e.slug)}`}
+                          className="flex items-center justify-center space-x-5"
+                        >
+                          <img
+                            className="sm:w-[80px] md:w-[120px] lg:w-[150px] w-[70px] h-auto object-cover inline"
+                            src={`/Images/x/${e.product_image}`}
+                            alt=""
+                          />
 
-                        <p>
-                          <strong className="group-hover:text-red-500">
-                            {e.product_name}
-                          </strong>
-                          <span className="flex">
-                            <CiStar />
-                            <CiStar />
-                            <CiStar />
-                            <CiStar />
-                            <CiStar />
-                          </span>
-                          <span className="text-red-500">
-                            {Number(e.product_price).toLocaleString()}{" "}
-                            <sub>đ</sub>
-                          </span>
-                        </p>
-                      </Link>
-                    </li>
+                          <p>
+                            <strong className="group-hover:text-red-500">
+                              {e.product_name}
+                            </strong>
+                            <span className="flex">
+                              <CiStar />
+                              <CiStar />
+                              <CiStar />
+                              <CiStar />
+                              <CiStar />
+                            </span>
+                            {e.percent_name ? (
+                              <p>
+                                <span className="text-red-500 font-semibold">
+                                  {Number(
+                                    e.product_price * (1 - e.percent_name / 100)
+                                  ).toLocaleString()}
+                                  <sub>đ</sub>
+                                </span>
+                                <br />
+                                <span className="text-gray-300 line-through">
+                                  {Number(e.product_price).toLocaleString()}
+                                  <sub>đ</sub>
+                                </span>
+                              </p>
+                            ) : (
+                              <span className="text-red-500 font-semibold">
+                                {Number(e.product_price).toLocaleString()}
+                                <sub>đ</sub>
+                              </span>
+                            )}
+                          </p>
+                        </Link>
+                      </li>
 
-                    <span className="bg-red-200 p-4 px-2 w-[30px] text-2xl h-[30px]  flex justify-center items-center rounded-full hover:bg-red-600 cursor-pointer">
-                      <IoIosOptions />
-                    </span>
-                  </>
-                );
-              })}
+                      {e.product_variant_name ? (
+                        <span
+                          onClick={() => {
+                            setModelOpen(!modelOpen);
+                            setSelectedId(e.product_id ?? null);
+                          }}
+                          className="bg-red-200 p-4 px-2 w-[30px] text-2xl h-[30px]  flex justify-center items-center rounded-full hover:bg-red-500 cursor-pointer"
+                        >
+                          <IoIosOptions />
+                        </span>
+                      ) : (
+                        <span
+                          onClick={() => {
+                            setModelOpen(!modelOpen);
+                            setSelectedId(e.product_id ?? null);
+                          }}
+                          className="bg-red-200 p-4 px-2 w-[30px] text-2xl h-[30px]  flex justify-center items-center rounded-full hover:bg-red-500 cursor-pointer"
+                        >
+                          <MdOutlineShoppingCartCheckout className="w-4 h-4" />
+                        </span>
+                      )}
+                    </>
+                  );
+                })}
             </ul>
           </div>
         </div>
@@ -132,6 +176,14 @@ export default function Section_3() {
           </Link>
         </p>
       </section>
+
+      <ModelProduct
+        productId={selectedId}
+        isOpen={modelOpen}
+        setIsOpen={setModelOpen}
+      />
+
+      {/* </> */}
 
       <div className="container mx-auto mb-5 mt-[50px] md:block hidden">
         <ul className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-x-5 place-items-center gap-y-4">

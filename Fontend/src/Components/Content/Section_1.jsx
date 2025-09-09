@@ -41,6 +41,31 @@ export default function Section_1() {
         setError("Phiếu giảm giá đang bị lỗi, xin lỗi bạn");
       });
   }, []);
+
+  useEffect(() => {
+    if (!copiedId) return;
+
+    // console.log(copiedId);
+
+    const token_user = localStorage.getItem("token");
+
+    axios
+      .post(
+        `http://localhost:8000/api/insert-coupon/${copiedId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token_user}`,
+          },
+        }
+      )
+      .then(() => {
+        console.log("thành công thêm code");
+      })
+      .catch((e) => {
+        console.log("Error", e);
+      });
+  }, [copiedId]);
   return (
     <>
       <section className="md:w-[1400px] mx-auto mt-4 px-4 ">
@@ -96,7 +121,7 @@ export default function Section_1() {
             )}
 
             {getCoupon.map((e) => {
-              const expiredDate = new Date(e.created_at);
+              const expiredDate = new Date(e.updated_at);
               const dayPresent = new Date();
               const displayDate = expiredDate.toLocaleDateString("vi-VN");
               const isValid = expiredDate >= dayPresent;
@@ -152,15 +177,15 @@ export default function Section_1() {
                         {copiedId === e.coupon_id
                           ? "Đã sao chép"
                           : isValid
-                          ? "Sao chép"
-                          : "Hết hạn"}
+                            ? "Sao chép"
+                            : "Hết hạn"}
                       </button>
                     </div>
                   </div>
                 </li>
               );
             })}
-          </ul>{" "}
+          </ul>
           {/* Tab indicator */}
           <div className="flex justify-center gap-2 mt-2 md:hidden">
             {getCoupon.map((_, i) => (

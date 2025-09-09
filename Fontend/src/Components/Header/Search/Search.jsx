@@ -103,7 +103,7 @@ export default function SearchComponent({
   }
 
   return (
-    <section className="h-[100vh] w-[350px] fixed top-0 right-0 bg-white shadow-lg z-50 ">
+    <section className="h-[100vh] w-[350px] fixed top-0 right-0 bg-white shadow-lg z-[800]">
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <ChevronLeft
@@ -183,8 +183,11 @@ export default function SearchComponent({
               className="flex items-center justify-between border hover:bg-gray-300 p-2 rounded"
             >
               <span className="flex items-center gap-2">
-                <FaHistory />{" "}
-                <span onClick={(event) => handleHistory(event)}>
+                <FaHistory />
+                <span
+                  className="block w-[calc(310px-80px)]"
+                  onClick={(event) => handleHistory(event)}
+                >
                   {e.history_search_name}
                 </span>
               </span>

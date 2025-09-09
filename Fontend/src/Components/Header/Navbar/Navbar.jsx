@@ -8,7 +8,7 @@ import "./Navbar.css";
 
 export default function Navbar() {
   const menuItems = [
-    { name: "Trang chủ", href: "/" },
+    { name: "Trang chủ", href: "/fast.foods" },
     { name: "Menu", hasDropdown: true },
     { name: "Chương trình khuyến mãi", hasDropdown: true },
     { name: "Đặt bàn", href: "#" },

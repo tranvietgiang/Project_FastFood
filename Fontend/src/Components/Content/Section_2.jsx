@@ -10,14 +10,18 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import HandleIconEffect from "../Features/Handle/HandleIconEffect";
+import { ModelProduct } from "../PageOther/ModelProduct";
+import HandleCompare from "../Features/Handle/HandleCompare";
 
 export default function Section_2() {
   const [getProduct, setGetProduct] = useState([]);
   const [error, setError] = useState("");
   const [startIndex, setStartIndex] = useState(0);
   const itemsPerPage = 4;
+  const [modelOpen, setModelOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
-  // console.log(getProduct);
   const handlePrev = () => {
     setStartIndex((prev) => Math.max(prev - itemsPerPage, 0));
   };
@@ -92,22 +96,38 @@ export default function Section_2() {
                           gradientTo="to-pink-500"
                           groupName="group/heart"
                         />
-                        <HandleIconEffect
-                          icon={AiOutlineEye}
-                          tooltip="Xem nhanh"
-                          gradientFrom="from-blue-500"
-                          gradientTo="to-cyan-500"
-                          groupName="group/eye"
-                        />
-                        <HandleIconEffect
-                          icon={IoIosGitCompare}
-                          tooltip="So sánh"
-                          gradientFrom="from-green-500"
-                          gradientTo="to-emerald-500"
-                          groupName="group/compare"
-                        />
+                        <span
+                          onClick={() => {
+                            setSelectedId(e.product_id ?? null);
+                            setModelOpen(!modelOpen);
+                          }}
+                        >
+                          <HandleIconEffect
+                            icon={AiOutlineEye}
+                            tooltip="Xem nhanh"
+                            gradientFrom="from-blue-500"
+                            gradientTo="to-cyan-500"
+                            groupName="group/eye"
+                          />
+                        </span>
+                        <span
+                          onClick={() => {
+                            setSelectedId(e.product_id ?? null);
+                            setCompareOpen(!modelOpen);
+                          }}
+                        >
+                          <HandleIconEffect
+                            icon={IoIosGitCompare}
+                            tooltip="So sánh"
+                            gradientFrom="from-green-500"
+                            gradientTo="to-emerald-500"
+                            groupName="group/compare"
+                          />
+                        </span>
                       </div>
+
                       <Link
+                        className="relative"
                         to={`/item/detail/${encodeURIComponent(e.slug)}`}
                         state={{ id: e.product_id }}
                       >
@@ -117,7 +137,7 @@ export default function Section_2() {
                           alt="foods"
                         />
 
-                        <span className="absolute bg-red-500 rounded-md sm:text-base  p-1 px-1 text-white/100 text-sm top-0 right-[80%] -mx-[20px]">
+                        <span className="absolute bg-red-500 rounded-md sm:text-base  p-1 px-1 text-white/100 text-sm top-0 right-[40%] -mx-[20px]">
                           -{e.percent_name}%
                         </span>
 
@@ -141,14 +161,22 @@ export default function Section_2() {
                           )}
                           <span className="text-black opacity-45 block text-sm">
                             <del>
-                              {Number(e.product_price).toLocaleString() ?? ""}{" "}
+                              {Number(e.product_price).toLocaleString() ?? ""}
                               <sub>đ</sub>
                             </del>
                           </span>
                         </p>
-                        <p className="relative z-[1000]  mt-3">
+                        <p className="relative z-[500]  mt-3">
                           {e.product_variant_name ? (
-                            <button className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto  hover:bg-red-600 duration-300 transition-color">
+                            <button
+                              onClick={(a) => {
+                                a.preventDefault();
+                                a.stopPropagation();
+                                setModelOpen(!modelOpen);
+                                setSelectedId(e.product_id);
+                              }}
+                              className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto  hover:bg-red-600 duration-300 transition-color"
+                            >
                               Tùy chọn <IoIosOptions />
                             </button>
                           ) : (
@@ -166,6 +194,22 @@ export default function Section_2() {
                 );
               })}
           </ul>
+
+          <div>
+            <ModelProduct
+              productId={selectedId}
+              setIsOpen={setModelOpen}
+              isOpen={modelOpen}
+            />
+          </div>
+
+          <div>
+            <HandleCompare
+              isOpen={compareOpen}
+              setOpen={setCompareOpen}
+              productId={selectedId}
+            />
+          </div>
 
           {/*Click để move img */}
           <div className="absolute w-[95%] top-[45%] sm:-top-[400px] md:top-[45%] md:w-[100%] flex justify-between px-4">

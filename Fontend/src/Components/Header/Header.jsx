@@ -1,5 +1,5 @@
-import { FaRegUserCircle } from "react-icons/fa";
-import { FaCartArrowDown } from "react-icons/fa";
+import { CiUser } from "react-icons/ci";
+import { CiShoppingCart } from "react-icons/ci";
 import { CiSearch } from "react-icons/ci";
 import { useState } from "react";
 import Navbar from "./Navbar/Navbar";
@@ -16,6 +16,15 @@ function Header() {
   const closeSearch = () => setShowSearch(false);
   const [historySearch, setHistorySearch] = useState([]);
   const [fixed, setFixed] = useState(false);
+  const isValidToken = localStorage.getItem("token");
+
+  const [token, setToken] = useState(false);
+
+  useEffect(() => {
+    if (isValidToken) {
+      setToken(true);
+    }
+  }, [isValidToken]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,12 +50,12 @@ function Header() {
   return (
     <header
       className={`bg-white shadow-sm border-b border-gray-200 ${
-        fixed ? "fixed w-[100%] top-0 z-[999]" : ""
+        fixed ? "fixed w-[100%] top-0 z-[850]" : ""
       }`}
     >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/">
+          <Link to="/fast.foods">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xl">EGA</span>
@@ -70,10 +79,14 @@ function Header() {
               <CiSearch onClick={openSearch} size={24} />
             </button>
             <button className="text-gray-600 hover:text-gray-800 transition-colors">
-              <FaRegUserCircle size={24} />
+              {
+                <Link to={`${!token ? "/auth/login" : "/user"}`}>
+                  <CiUser size={24} />
+                </Link>
+              }
             </button>
             <button className="relative text-gray-600 hover:text-gray-800 transition-colors">
-              <FaCartArrowDown size={24} />
+              <CiShoppingCart size={24} />
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 0
               </span>

@@ -1,10 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CiStar } from "react-icons/ci";
 import { FaAngleRight } from "react-icons/fa6";
+import { AiOutlineCloseCircle } from "react-icons/ai";
+import { RiErrorWarningLine } from "react-icons/ri";
 import { useEffect, useState } from "react";
 import { Paginate } from "../../Features/Paginate/Paginate";
+import { RiCoupon2Line } from "react-icons/ri";
 import ProductRelated from "./ProductRelated";
 import RecentlyViews from "./RecentlyViews";
+import HandleCopy from "../../Features/Handle/HandleCopy";
+import { useMemo } from "react";
+import axios from "axios";
 
 export default function ItemDetail() {
   const location = useLocation();
@@ -12,7 +18,7 @@ export default function ItemDetail() {
   const [getProduct, setProduct] = useState([]);
   const [error, setError] = useState("");
   const [priceDiscount, setPriceDiscount] = useState(null);
-  const [priceVariantPrice, setPriceVariantPrice] = useState(null);
+  // const [priceVariantPrice, setPriceVariantPrice] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [drinkTogether, setDrinkTogether] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +29,10 @@ export default function ItemDetail() {
   const pageLast = pageFirst - itemsPerPage;
   const lastPage = Math.ceil(drinkTogether.length / itemsPerPage);
   const navigate = useNavigate();
+  const [getDiscount, setDiscount] = useState([]);
+  const [turnDiscount, setTurnDiscount] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [copiedText, setCopiedText] = useState("");
 
   const ClickIncrease = () => {
     setQuantity((pev) => pev + 1);
@@ -34,21 +44,28 @@ export default function ItemDetail() {
     }
   };
 
+  const reset = () => {
+    setSelectVariants("");
+    // setPriceVariantPrice(null);
+  };
+
   useEffect(() => {
     if (!id) return;
 
     fetch(`http://localhost:8000/api/products/detail/by-id/${id}`)
       .then((res) => res.json())
       .then((data) => {
+        let products = data?.first ?? data;
         setProduct(data);
-        if (data?.first?.percent_name) {
-          setPriceDiscount(
-            data?.first?.product_price * (1 - data.first?.percent_name / 100)
-          );
-        }
 
-        setSelectVariants("");
-        setPriceVariantPrice(null);
+        let a =
+          products?.product_price && products?.percent_name
+            ? products.product_price * (1 - products.percent_name / 100)
+            : null;
+        setQuantity(1);
+        setNoteOrder("");
+        setPriceDiscount(a);
+        reset();
         // data?.variants?.some(v => v.product_variant_name
       })
       .catch((e) => {
@@ -58,17 +75,23 @@ export default function ItemDetail() {
       });
   }, [id]);
 
-  useEffect(() => {
-    if (!getProduct?.variants?.length) return;
+  // useEffect(() => {
+  //   if (!getProduct?.variants?.length) return;
 
-    let variant = getProduct?.variants?.find(
-      (e) => e.product_variant_name == selectVariants
+  //   let variant = getProduct?.variants?.find(
+  //     (e) => e.product_variant_name == selectVariants
+  //   );
+
+  //   setPriceVariantPrice(variant?.product_variant_price ?? null);
+  // }, [selectVariants, getProduct]);
+
+  const selectedVariant = useMemo(() => {
+    return getProduct?.variants?.find(
+      (e) => e.product_variant_name === selectVariants
     );
-
-    setPriceVariantPrice(variant?.product_variant_price ?? null);
   }, [selectVariants, getProduct]);
 
-  // console.log();
+  const priceVariantPrice = selectedVariant?.product_variant_price ?? null;
 
   useEffect(() => {
     const cache_drink_products = localStorage.getItem("cache_drink_products");
@@ -91,6 +114,45 @@ export default function ItemDetail() {
         console.log("Error", e);
       });
   }, []);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:8000/api/getDiscount`)
+      .then((res) => {
+        setDiscount(res.data);
+      })
+      .catch((e) => {
+        setDiscount([]);
+        console.log("error-discount", e);
+      });
+  }, []);
+  const [noteOrder, setNoteOrder] = useState(null);
+
+  // useEffect(() => {}, [setPackage]);
+  const handleBuyNow = async () => {
+    let finalName = getProduct?.first?.product_name || getProduct?.product_name;
+    let finalPrice = priceDiscount || getProduct?.product_price;
+
+    if (selectVariants != "") {
+      finalName = selectVariants;
+      finalPrice = priceVariantPrice || finalPrice;
+    }
+
+    const newPackage = {
+      idOrder: getProduct?.first?.product_id || getProduct?.product_id,
+      nameOrder: finalName,
+      priceOrder: Number(finalPrice).toFixed(2),
+      quantityOrder: quantity,
+      noteOrder: noteOrder || "",
+      imageOrder: getProduct?.product_image || getProduct?.first?.product_image,
+    };
+
+    localStorage.setItem("packageOrder", JSON.stringify(newPackage));
+    navigate("/information-orders");
+  };
+  const percent = getProduct?.first?.percent_name ?? getProduct?.percent_name;
+  const originalPrice =
+    getProduct?.first?.product_price ?? getProduct?.product_price;
 
   return (
     <section className="md:w-[1400px] mx-auto p-4 mt-3">
@@ -146,7 +208,7 @@ export default function ItemDetail() {
                   )
                   .slice(pageLast, pageFirst)
                   .map((e, index) => (
-                    <li key={index}>
+                    <li className="relative" key={index}>
                       <Link
                         to={`/item/detail/${encodeURIComponent(e.slug)}`}
                         state={{ id: e.product_id }}
@@ -160,7 +222,7 @@ export default function ItemDetail() {
                         </span>
                         <p className="text-center">
                           <strong className="font-semibold text-1xl md:text-1xl">
-                            {e.product_name}
+                            {e.product_name ?? null}
                           </strong>
                           <br />
                           <span className="text-red-500 font-bold text-lg">
@@ -168,7 +230,7 @@ export default function ItemDetail() {
                             <sub>đ</sub>
                           </span>
                           {e.percent_name && (
-                            <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                            <span className=" text-red-600 font-bold  rounded text-sm absolute top-0">
                               -{e.percent_name}%
                             </span>
                           )}
@@ -180,13 +242,15 @@ export default function ItemDetail() {
             </div>
           </div>
 
-          <span className="md:mt-[-30px] mb-10 md:block hidden">
-            <Paginate
-              currentPage={currentPage}
-              lastPage={lastPage}
-              setCurrentPage={setCurrentPage}
-            />
-          </span>
+          {lastPage && (
+            <span className="md:mt-[-30px] mb-10 md:block hidden">
+              <Paginate
+                currentPage={currentPage}
+                lastPage={lastPage}
+                setCurrentPage={setCurrentPage}
+              />
+            </span>
+          )}
         </div>
 
         {/* Thông tin sản phẩm */}
@@ -229,66 +293,179 @@ export default function ItemDetail() {
 
           {/* Giá */}
           <div className="flex items-center gap-3">
-            {priceVariantPrice ? (
+            {priceVariantPrice != null ? (
+              // variant
               <span className="text-red-600 text-2xl font-bold">
-                {Number(priceVariantPrice).toLocaleString() ?? null}
+                {Number(priceVariantPrice).toLocaleString()}đ
               </span>
-            ) : getProduct?.first?.percent_name || getProduct.percent_name ? (
+            ) : getProduct?.first?.percent_name || getProduct?.percent_name ? (
+              // có giảm giá
               <span className="text-red-600 text-2xl font-bold">
                 {Number(priceDiscount).toLocaleString()}đ
               </span>
             ) : (
+              // giá gốc
               <span className="text-red-600 text-2xl font-bold">
                 {Number(
-                  getProduct?.first?.product_price || getProduct.product_price
+                  getProduct?.first?.product_price || getProduct?.product_price
                 ).toLocaleString()}
                 đ
               </span>
             )}
 
-            {/*Percent*/}
-            {(getProduct?.first?.percent_name || getProduct.percent_name) && (
-              <span className="line-through text-gray-400">
-                {Number(
-                  getProduct?.first?.product_price || getProduct.product_price
-                ).toLocaleString()}
-                đ
-              </span>
+            {!selectVariants && percent && (
+              <>
+                <span className="line-through text-gray-400">
+                  {Number(originalPrice).toLocaleString()}đ
+                </span>
+                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                  -{percent}%
+                </span>
+              </>
             )}
-            {(getProduct?.first?.percent_name || getProduct?.percent_name) && (
-              <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
-                -{getProduct?.first?.percent_name || getProduct?.percent_name}%
-              </span>
-            )}
-          </div>
-
-          {/* Khuyến mãi */}
-          <div className="border border-green-200 bg-green-50 rounded p-3 text-sm">
-            <strong className="block mb-1">🎁 Quà tặng khuyến mãi</strong>
-            <ul className="list-disc pl-4 space-y-1">
-              <li>Nhập mã EGANY thêm 5% đơn hàng</li>
-              <li>Giảm giá 10% khi mua từ 5 sản phẩm</li>
-              <li>Giảm giá 10% khi mua từ 5 sản phẩm</li>
-              <li>Tặng phiếu mua hàng khi mua từ 500k</li>
-            </ul>
           </div>
 
           {/* Mã giảm giá */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Mã giảm giá:</span>
-            <span className="bg-yellow-100 text-orange-600 px-2 py-1 rounded">
-              EGA15
-            </span>
-            <span className="bg-yellow-100 text-orange-600 px-2 py-1 rounded">
-              EGA30
-            </span>
-            <FaAngleRight className="text-gray-400" />
+          <div className="cursor-pointer">
+            <span className="text-sm mb-3 inline-block">Mã giảm giá:</span>
+            <br />
+            <p className="flex items-center gap-x-3 ">
+              {getDiscount.slice(0, 2).map((e, index) => (
+                <span
+                  key={index}
+                  className="flex  items-center gap-x-2 bg-yellow-100 text-orange-600 px-2 py-1 rounded"
+                >
+                  <RiCoupon2Line /> RT{e.coupon_id ?? ""}
+                </span>
+              ))}
+              <FaAngleRight
+                onClick={() => setTurnDiscount(!turnDiscount)}
+                className="text-gray-400"
+              />
+            </p>
+          </div>
+
+          {turnDiscount && (
+            <div
+              onClick={() => setTurnDiscount(false)}
+              className="fixed inset-0 bg-black bg-opacity-50 z-[999]"
+            ></div>
+          )}
+
+          <div
+            className={`fixed top-0 bg-white p-4 right-0 grid grid-cols-1 z-[999] gap-y-5 max-h-[100%] overflow-y-auto space-y-3 ${turnDiscount ? "block" : "hidden"}`}
+          >
+            {copiedText && (
+              <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 mt-[300px] py-2 rounded-md shadow-md z-[999] text-center text-sm">
+                {copiedText}
+              </div>
+            )}
+            <p>Mã giảm giá</p>
+
+            {getDiscount.map((e) => {
+              const expiredDate = new Date(e.updated_at);
+              const dayPresent = new Date();
+              const displayDate = expiredDate.toLocaleDateString("vi-VN");
+              const isValid = expiredDate >= dayPresent;
+
+              // if (dayPresent.getFullYear() < expiredDate.getFullYear()) {
+              //   setCheckCoupon(false);
+              // } else if (dayPresent.getFullYear() > expiredDate.getFullYear()) {
+              //   setCheckCoupon(true);
+              // } else {
+              //   if (dayPresent.getMonth() + 1 < expiredDate.getMonth() + 1) {
+              //     setCheckCoupon(true);
+              //   } else if (
+              //     dayPresent.getMonth() + 1 >
+              //     expiredDate.getMonth() + 1
+              //   ) {
+              //     setCheckCoupon(false);
+              //   } else {
+              //     if (dayPresent.getDate() < expiredDate.getDate()) {
+              //       setCheckCoupon(true);
+              //     } else if (dayPresent.getDate() > expiredDate.getDate()) {
+              //       setCheckCoupon(false);
+              //     } else {
+              //       setCheckCoupon(true);
+              //     }
+              //   }
+              // }
+
+              return (
+                <li
+                  key={e.coupon_id}
+                  className="flex-none md:flex w-[100%] snap-center bg-red-100 rounded-lg overflow-hidden shadow-sm"
+                >
+                  <div className="w-24 flex items-center justify-center bg-red-200 font-bold text-gray-800">
+                    RTL{e.coupon_id}
+                  </div>
+
+                  <div className="flex-1 p-3 flex flex-col justify-between">
+                    <div>
+                      <p className="text-sm text-gray-800">{e.coupon_name}</p>
+                      <p className="flex items-center gap-1 text-red-500 text-xs font-semibold mt-1">
+                        <RiErrorWarningLine /> Điều kiện
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-gray-600">
+                        {displayDate}
+                      </span>
+
+                      {copiedId === e.coupon_id && (
+                        <HandleCopy
+                          text={copiedId}
+                          setCopiedText={setCopiedText}
+                        />
+                      )}
+
+                      <button
+                        disabled={!isValid}
+                        onClick={() => {
+                          if (!isValid) return;
+
+                          setCopiedId(e.coupon_id);
+                          setCopiedText("Đã sao chép");
+
+                          setTimeout(() => {
+                            setCopiedId(null);
+                            setCopiedText("");
+                          }, 2000);
+                        }}
+                        className={`px-3 py-1 rounded-md text-sm ${
+                          isValid
+                            ? "bg-red-600 text-white hover:bg-red-700"
+                            : "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        }`}
+                      >
+                        {copiedId === e.coupon_id
+                          ? "Đã sao chép"
+                          : isValid
+                            ? "Sao chép"
+                            : "Hết hạn"}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </div>
 
           {/*các sự lựa chon khác*/}
           {getProduct?.variants?.length ? (
             <p>
-              <h3 className="font-bold text-lg mb-2">Các lựa chọn khác</h3>
+              <div className="flex gap-x-3 items-center">
+                <h3 className="font-bold text-lg mb-2">Các lựa chọn khác</h3>
+                <button
+                  className={`mt-[-5px] ${
+                    selectVariants ? "hover:text-red-500 " : ""
+                  }`}
+                  onClick={() => setSelectVariants("")}
+                >
+                  <AiOutlineCloseCircle className="text-md" />
+                </button>
+              </div>
               <div className="flex gap-x-3">
                 {getProduct?.variants?.map((e, i) => (
                   <button
@@ -311,6 +488,8 @@ export default function ItemDetail() {
             <label className="text-sm font-medium">Ghi chú món ăn:</label>
             <input
               type="text"
+              value={noteOrder}
+              onChange={(e) => setNoteOrder(e.target.value)}
               className="border border-gray-300 rounded w-full p-2 mt-1 focus:outline-none focus:border-red-500"
               placeholder="Nhập ghi chú..."
             />
@@ -338,7 +517,10 @@ export default function ItemDetail() {
               Thêm vào giỏ
             </button>
 
-            <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
               Mua ngay
             </button>
           </div>
