@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, Edit3, ArrowLeft } from "lucide-react";
+import ClipLoader from "react-spinners/ClipLoader";
 import axios from "axios";
 
 export default function InformationOrders() {
@@ -14,9 +14,28 @@ export default function InformationOrders() {
   const [finalPriceRe, setFinalPriceRe] = useState(null);
   const [confirm, setConfirm] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const navigate = useNavigate();
+  const [userSelectPM, setUserSelectPM] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Khi chọn coupon
+  const navigate = useNavigate();
+  const priceProductRef = useRef();
+  const priceTempRef = useRef();
+  const priceTotalRef = useRef();
+
+  useEffect(() => {
+    const order = localStorage.getItem("packageOrder");
+    const user = localStorage.getItem("user");
+    if (user) {
+      setUser(JSON.parse(user));
+    } else {
+      navigate("/auth/login");
+    }
+
+    if (order) {
+      setOrders(JSON.parse(order));
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (userCoupon && userCoupon !== appliedCoupon) {
       setConfirm(false);
@@ -27,35 +46,18 @@ export default function InformationOrders() {
     }
   }, [userCoupon, appliedCoupon, finalPrice]);
 
-  console.log(appliedCoupon, userCoupon);
-
-  useEffect(() => {
-    const order = localStorage.getItem("packageOrder");
-    const user = localStorage.getItem("user");
-    if (order) {
-      setOrders(JSON.parse(order));
-    }
-    if (user) {
-      setUser(JSON.parse(user));
-    }
-  }, []);
-
   const handleLogout = () => {
     localStorage.removeItem("packageOrder");
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
 
     navigate("/auth/login");
-  };
-
-  const handleCss = (value) => {
-    setPayment(value);
   };
 
   let priceTotal = getOrder?.priceOrder * getOrder?.quantityOrder;
 
   const handleCoupon = async () => {
     if (!userCoupon) return;
-    // console.log(userCoupon);
     try {
       const res = await axios.get(
         `http://localhost:8000/api/enter-the-coupon/
@@ -89,10 +91,111 @@ export default function InformationOrders() {
         setUserCouponList([]);
       });
   }, []);
-  // console.log("% giảm:", getCoupon);
-  // console.log("price total:", priceTotal);
-  // console.log("price final if have percents:", finalPrice);
 
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 50000);
+
+    return () => clearTimeout(loading);
+  });
+
+  const handlePayment = async () => {
+    // if (
+    //   priceProductRef.current.textContent !=
+    //   Number(getOrder?.priceOrder).toLocaleString()
+    // ) {
+    //   navigate("/notFile");
+    //   console.log(
+    //     priceProductRef.current.textContent,
+    //     Number(getOrder?.priceOrder).toLocaleString()
+    //   );
+    //   return;
+    // }
+
+    // if (finalPrice) {
+    //   if (
+    //     priceTempRef.current.textContent != Number(finalPrice).toLocaleString()
+    //   ) {
+    //     navigate("/notFile");
+    //   }
+    // } else {
+    //   if (
+    //     priceTempRef.current.textContent != Number(priceTotal).toLocaleString()
+    //   ) {
+    //     navigate("/notFile");
+    //     return;
+    //   }
+    // }
+
+    // if (
+    //   priceTotalRef.current.textContent != Number(priceTotal).toLocaleString()
+    // ) {
+    //   navigate("/notFile");
+    //   return;
+    // }
+
+    setLoading(true);
+
+    let pm = null;
+
+    pm =
+      userSelectPM == "vnPay"
+        ? 2
+        : userSelectPM == "zaloPay"
+          ? 3
+          : userSelectPM == "momo"
+            ? 4
+            : 1;
+
+    let priceToPay =
+      getCoupon > 0 ? priceTotal * (1 - getCoupon / 100) : priceTotal;
+
+    if (userCoupon && userCoupon !== appliedCoupon) {
+      priceToPay = priceTotal;
+    }
+
+    const data = {
+      bill_product_id: getOrder?.idOrder,
+      bill_user_id: getUser?.id,
+      bill_payment_id: pm,
+      bill_price_total: priceToPay,
+      bill_quantity: getOrder?.quantityOrder,
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.post(
+        `http://localhost:8000/api/checkout/buy-now`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-type": "application/json",
+          },
+        }
+      );
+
+      setLoading(false);
+      localStorage.setItem("bills", JSON.stringify(data));
+
+      if (res.data.payment_url) {
+        // Nếu là VNPAY
+        window.location.href = res.data.payment_url;
+      } else if (res.data.payment.orderurl) {
+        // Nếu là ZaloPay
+        window.location.href = res.data.payment.orderurl;
+      } else {
+        console.log("Không có URL thanh toán trả về:", res.data);
+      }
+    } catch (error) {
+      setLoading(true);
+      console.log(error);
+    }
+  };
+
+  // console.log(a);
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -182,9 +285,11 @@ export default function InformationOrders() {
 
               <div className="space-y-3">
                 <form>
+                  {/* Chuyển khoản */}
                   <div
-                    onClick={() => handleCss("bank")}
-                    className={`flex items-center gap-3 p-3 border ${payment === "bank" ? "border-blue-500 bg-blue-50" : ""}  rounded mb-2 `}
+                    onClick={() => setPayment("bank")}
+                    className={`flex items-center gap-3 p-3 border rounded mb-2 cursor-pointer 
+                    ${payment === "bank" ? "border-gray-800 bg-gray-100" : ""}`}
                   >
                     <input
                       type="radio"
@@ -198,9 +303,38 @@ export default function InformationOrders() {
                     <label htmlFor="payment1">Chuyển khoản</label>
                   </div>
 
+                  {/* Nếu chọn bank thì show thêm options */}
+                  {payment === "bank" && (
+                    <div className="ml-6 space-y-2">
+                      {["vnPay", "zaloPay", "momo"].map((method) => (
+                        <div
+                          key={method}
+                          onClick={() => setUserSelectPM(method)}
+                          className={`flex items-center gap-3 p-2 border w-[400px] rounded cursor-pointer
+                           ${userSelectPM === method ? "border-blue-500 bg-blue-50" : ""}`}
+                        >
+                          <input
+                            type="radio"
+                            name="bankMethod"
+                            id={method}
+                            value={method}
+                            checked={userSelectPM === method}
+                            onChange={(e) => setUserSelectPM(e.target.value)}
+                            className="w-4 h-4"
+                          />
+                          <label htmlFor={method} className="capitalize">
+                            {method}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* COD */}
                   <div
-                    onClick={() => handleCss("cod")}
-                    className={`flex items-center gap-3 p-3 border ${payment === "cod" ? "border-blue-500 bg-blue-50" : ""}  rounded `}
+                    onClick={() => setPayment("cod")}
+                    className={`flex items-center gap-3 p-3 border rounded cursor-pointer
+                  ${payment === "cod" ? "border-blue-500 bg-blue-50" : ""} mt-4`}
                   >
                     <input
                       type="radio"
@@ -244,7 +378,10 @@ export default function InformationOrders() {
                   <h3 className="font-medium">{getOrder?.nameOrder ?? ""}</h3>
                 </div>
                 <span className="font-medium text-red-500">
-                  {Number(getOrder?.priceOrder ?? 0).toLocaleString()}₫
+                  <span ref={priceProductRef}>
+                    {Number(getOrder?.priceOrder ?? 0).toLocaleString()}
+                  </span>
+                  ₫
                 </span>
               </div>
 
@@ -256,10 +393,11 @@ export default function InformationOrders() {
                     name="user-coupon"
                     value={userCoupon ?? null}
                     onChange={(e) => {
-                      const value = e.target.value;
+                      const value =
+                        e.target.value === "" ? null : e.target.value;
                       setUserCoupon(e.target.value);
 
-                      if (value == "Chọn mã") {
+                      if (value == "chọn mã") {
                         setFinalPrice(null);
                         setCoupon(null);
                       } else {
@@ -287,7 +425,7 @@ export default function InformationOrders() {
                     {!confirm && userCoupon !== "" ? (
                       <button
                         onClick={handleCoupon}
-                        className="px-4 py-2  text-white bg-blue-600 rounded text-sm font-medium"
+                        className={`${userCoupon == "Chọn mã" ? "bg-gray-500" : ""} px-4 py-2 truncate  text-white bg-blue-600 rounded text-sm font-medium`}
                       >
                         Áp dụng
                       </button>
@@ -308,18 +446,22 @@ export default function InformationOrders() {
                 <div className="flex justify-between text-sm">
                   <span>Tạm tính</span>
                   <span className="font-medium text-red-500 text-[18px] inline-block">
-                    {finalPrice && userCoupon === appliedCoupon
-                      ? Number(finalPrice).toLocaleString()
-                      : Number(priceTotal).toLocaleString()}
+                    <span ref={priceTempRef}>
+                      {finalPrice && userCoupon === appliedCoupon
+                        ? Number(finalPrice).toLocaleString()
+                        : Number(priceTotal).toLocaleString()}
+                    </span>
                     ₫
                   </span>
                 </div>
                 <div className="flex justify-between font-medium text-lg pt-2 border-t">
                   <span>Tổng cộng</span>
                   <span className="font-medium text-red-600 text-[19px] inline-block">
-                    {finalPrice && userCoupon === appliedCoupon
-                      ? Number(finalPrice).toLocaleString()
-                      : Number(priceTotal).toLocaleString()}
+                    <span ref={priceTotalRef}>
+                      {finalPrice && userCoupon === appliedCoupon
+                        ? Number(finalPrice).toLocaleString()
+                        : Number(priceTotal).toLocaleString()}
+                    </span>
                     đ
                   </span>
                 </div>
@@ -337,7 +479,15 @@ export default function InformationOrders() {
                     ← Quay về giỏ hàng
                   </Link>
                 </button>
-                <button className="w-full py-3 bg-blue-600 text-white rounded font-medium">
+                {loading && (
+                  <div className="flex justify-center items-center fixed inset-0 bg-black opacity-50">
+                    <ClipLoader size={30} color="#36d7b7" loading={loading} />
+                  </div>
+                )}
+                <button
+                  onClick={handlePayment}
+                  className="w-full py-3 bg-blue-600 text-white rounded font-medium"
+                >
                   ĐẶT HÀNG
                 </button>
               </div>

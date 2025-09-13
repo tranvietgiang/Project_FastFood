@@ -212,7 +212,8 @@ class ProductController extends Controller
             "percents.percent_name",
             "product_variants.product_id as product_variant_fk_id",
             "product_variants.product_variant_name",
-            "product_variants.product_variant_price"
+            "product_variants.product_variant_price",
+            "product_variants.product_variant_quantity"
         )
             ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
             ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")
@@ -225,7 +226,8 @@ class ProductController extends Controller
                 "percents.percent_name",
                 "product_variants.product_id as product_variant_fk_id",
                 "product_variants.product_variant_name",
-                "product_variants.product_variant_price"
+                "product_variants.product_variant_price",
+                "product_variants.product_variant_quantity"
             )
                 ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
                 ->leftJoin("product_variants", "products.product_id", "=", "product_variants.product_id")

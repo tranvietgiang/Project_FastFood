@@ -2,8 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CiStar } from "react-icons/ci";
 import { FaAngleRight } from "react-icons/fa6";
 import { AiOutlineCloseCircle } from "react-icons/ai";
-import { RiErrorWarningLine } from "react-icons/ri";
-import { useEffect, useState } from "react";
+import { RiErrorWarningLine, RiLandscapeAiFill } from "react-icons/ri";
+import { useEffect, useRef, useState } from "react";
 import { Paginate } from "../../Features/Paginate/Paginate";
 import { RiCoupon2Line } from "react-icons/ri";
 import ProductRelated from "./ProductRelated";
@@ -33,6 +33,7 @@ export default function ItemDetail() {
   const [turnDiscount, setTurnDiscount] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [copiedText, setCopiedText] = useState("");
+  const [quantityStore, setQuantityStore] = useState(null);
 
   const ClickIncrease = () => {
     setQuantity((pev) => pev + 1);
@@ -65,6 +66,7 @@ export default function ItemDetail() {
         setQuantity(1);
         setNoteOrder("");
         setPriceDiscount(a);
+        setQuantityStore(null);
         reset();
         // data?.variants?.some(v => v.product_variant_name
       })
@@ -128,14 +130,33 @@ export default function ItemDetail() {
   }, []);
   const [noteOrder, setNoteOrder] = useState(null);
 
-  // useEffect(() => {}, [setPackage]);
+  const quantityRef = useRef();
+  const priceRef = useRef();
+  const nameRef = useRef();
+
   const handleBuyNow = async () => {
+    if (quantityRef.current?.innerText != quantity) {
+      navigate("/notFile");
+      return;
+    }
+
     let finalName = getProduct?.first?.product_name || getProduct?.product_name;
     let finalPrice = priceDiscount || getProduct?.product_price;
+
+    if (nameRef.current?.innerText.trim() !== finalName.trim()) {
+      navigate("/notFile");
+      console.log(nameRef.current?.innerText.trim(), finalName.trim());
+      return;
+    }
 
     if (selectVariants != "") {
       finalName = selectVariants;
       finalPrice = priceVariantPrice || finalPrice;
+    }
+
+    if (priceRef.current.textContent != Number(finalPrice).toLocaleString()) {
+      navigate("/notFile");
+      return;
     }
 
     const newPackage = {
@@ -150,9 +171,16 @@ export default function ItemDetail() {
     localStorage.setItem("packageOrder", JSON.stringify(newPackage));
     navigate("/information-orders");
   };
+
   const percent = getProduct?.first?.percent_name ?? getProduct?.percent_name;
   const originalPrice =
     getProduct?.first?.product_price ?? getProduct?.product_price;
+
+  const maxQuantity =
+    quantityStore ??
+    getProduct?.product_quantity ??
+    getProduct?.first?.product_quantity;
+  const isDisabled = quantity > maxQuantity;
 
   return (
     <section className="md:w-[1400px] mx-auto p-4 mt-3">
@@ -165,8 +193,8 @@ export default function ItemDetail() {
           Sản phẩm nổi bật
         </Link>
         /
-        <span className="text-gray-700">
-          {getProduct?.first?.product_name || getProduct.product_name}
+        <span ref={nameRef} className="text-gray-700">
+          {getProduct?.first?.product_name ?? getProduct.product_name}
         </span>
       </p>
 
@@ -256,7 +284,7 @@ export default function ItemDetail() {
         {/* Thông tin sản phẩm */}
         <div className="md:w-1/2 md:pl-8 flex flex-col gap-4 md:mt-0 mt-[20px]">
           <div>
-            <h1 className="text-xl font-bold max-w-[400px]">
+            <h1 ref={nameRef} className="text-xl font-bold max-w-[400px]">
               {getProduct?.first?.product_name || getProduct.product_name}
             </h1>
             <div className="flex items-center text-yellow-500">
@@ -276,6 +304,7 @@ export default function ItemDetail() {
               <span
                 className={`mx-2
                   ${
+                    (quantityStore && quantityStore > 0) ||
                     getProduct?.first?.product_quantity > 0 ||
                     getProduct.product_quantity > 0
                       ? "text-green-600"
@@ -283,9 +312,16 @@ export default function ItemDetail() {
                   }
                   `}
               >
-                {getProduct?.first?.product_quantity > 0 ||
+                {(quantityStore && quantityStore > 0) ||
+                getProduct?.first?.product_quantity > 0 ||
                 getProduct.product_quantity > 0
-                  ? "Sẵn trong kho"
+                  ? `Sẵn trong kho (
+                  ${
+                    quantityStore
+                      ? quantityStore
+                      : getProduct?.product_quantity ||
+                        getProduct?.first?.product_quantity
+                  } )`
                   : "Hết hàng"}
               </span>
             </p>
@@ -296,19 +332,28 @@ export default function ItemDetail() {
             {priceVariantPrice != null ? (
               // variant
               <span className="text-red-600 text-2xl font-bold">
-                {Number(priceVariantPrice).toLocaleString()}đ
+                <span ref={priceRef ?? null}>
+                  {Number(priceVariantPrice).toLocaleString()}
+                </span>
+                đ
               </span>
             ) : getProduct?.first?.percent_name || getProduct?.percent_name ? (
               // có giảm giá
               <span className="text-red-600 text-2xl font-bold">
-                {Number(priceDiscount).toLocaleString()}đ
+                <span ref={priceRef ?? null}>
+                  {Number(priceDiscount).toLocaleString()}
+                </span>
+                đ
               </span>
             ) : (
               // giá gốc
               <span className="text-red-600 text-2xl font-bold">
-                {Number(
-                  getProduct?.first?.product_price || getProduct?.product_price
-                ).toLocaleString()}
+                <span ref={priceRef ?? null}>
+                  {Number(
+                    getProduct?.first?.product_price ||
+                      getProduct?.product_price
+                  ).toLocaleString()}
+                </span>
                 đ
               </span>
             )}
@@ -367,29 +412,6 @@ export default function ItemDetail() {
               const dayPresent = new Date();
               const displayDate = expiredDate.toLocaleDateString("vi-VN");
               const isValid = expiredDate >= dayPresent;
-
-              // if (dayPresent.getFullYear() < expiredDate.getFullYear()) {
-              //   setCheckCoupon(false);
-              // } else if (dayPresent.getFullYear() > expiredDate.getFullYear()) {
-              //   setCheckCoupon(true);
-              // } else {
-              //   if (dayPresent.getMonth() + 1 < expiredDate.getMonth() + 1) {
-              //     setCheckCoupon(true);
-              //   } else if (
-              //     dayPresent.getMonth() + 1 >
-              //     expiredDate.getMonth() + 1
-              //   ) {
-              //     setCheckCoupon(false);
-              //   } else {
-              //     if (dayPresent.getDate() < expiredDate.getDate()) {
-              //       setCheckCoupon(true);
-              //     } else if (dayPresent.getDate() > expiredDate.getDate()) {
-              //       setCheckCoupon(false);
-              //     } else {
-              //       setCheckCoupon(true);
-              //     }
-              //   }
-              // }
 
               return (
                 <li
@@ -461,7 +483,10 @@ export default function ItemDetail() {
                   className={`mt-[-5px] ${
                     selectVariants ? "hover:text-red-500 " : ""
                   }`}
-                  onClick={() => setSelectVariants("")}
+                  onClick={() => {
+                    setSelectVariants("");
+                    setQuantityStore(null);
+                  }}
                 >
                   <AiOutlineCloseCircle className="text-md" />
                 </button>
@@ -470,7 +495,10 @@ export default function ItemDetail() {
                 {getProduct?.variants?.map((e, i) => (
                   <button
                     key={i}
-                    onClick={() => setSelectVariants(e.product_variant_name)}
+                    onClick={() => {
+                      setSelectVariants(e.product_variant_name);
+                      setQuantityStore(e.product_variant_quantity);
+                    }}
                     className={`border p-2 rounded-lg  text-sm ${
                       selectVariants === e?.product_variant_name
                         ? "border-2 border-red-600"
@@ -503,7 +531,7 @@ export default function ItemDetail() {
             >
               -
             </button>
-            <span>{quantity}</span>
+            <span ref={quantityRef}>{quantity ?? null}</span>
             <button
               onClick={ClickIncrease}
               className="border px-3 py-1 rounded hover:bg-gray-100"
@@ -519,7 +547,13 @@ export default function ItemDetail() {
 
             <button
               onClick={handleBuyNow}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              disabled={isDisabled}
+              className={`${
+                isDisabled
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600"
+              }
+                text-white px-4 py-2 rounded`}
             >
               Mua ngay
             </button>
