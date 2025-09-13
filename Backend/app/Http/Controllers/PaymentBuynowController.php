@@ -19,20 +19,34 @@ class PaymentBuyNowController extends Controller
     {
         $formData = $request->all();
 
+        Cache::put(
+            "app_id_user",
+            ["bill_user_id" =>   $formData["bill_user_id"]],
+            now()->addMinutes(60)
+        );
+
+        Cache::put("formData_{$formData["bill_user_id"]}", [
+            "bill_product_id" =>  $formData["bill_product_id"],
+            "bill_user_id" => $formData["bill_user_id"],
+            "bill_payment_id" => $formData["bill_payment_id"],
+            "bill_price_total" => $formData["bill_price_total"],
+            "bill_quantity" => $formData["bill_quantity"],
+        ], now()->addMinutes(60));
+
+
         // Nếu thanh toán bằng VNPAY
         if ($formData["bill_payment_id"] == 2) {
-            $vnp_TmnCode   = "PR7H47SW";
-            $vnp_HashSecret = "WGUPUW7FBTFZHEF52ZPMDZ7IMFWT1Z7K";
+            $vnp_TmnCode   = "ZFVN0GBW";
+            $vnp_HashSecret = "XKPWP1CDDREYDSTWKYD2CRQD35DBWT3K";
             $vnp_Url       = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-            $vnp_Returnurl = "http://localhost:5173/vnpay-return"; // ReactJS nhận kết quả
+            $vnp_Returnurl = "http://localhost:5173/result-vnPay";
 
-            $vnp_TxnRef    = time();
+            // $vnp_TxnRef    = time(); // mã đơn hàng
+            $vnp_TxnRef    = uniqid(); // sinh chuỗi duy nhất theo thời gian microsecond
             $vnp_OrderInfo = "Thanh toán hóa đơn";
             $vnp_OrderType = "billpayment";
-            $vnp_Amount = $formData["bill_price_total"] * 100; // Số tiền phải nhân 100 (VNPAY yêu cầu)
-            $vnp_Locale = "vn";
-            $vnp_BankCode = "NCB"; // Có thể đổi thành ngân hàng khác nếu cần
-            $vnp_IpAddr = $formData["bill_user_id"]; // IP khách hàng
+            $vnp_Amount    = $formData["bill_price_total"] * 100; // nhân 100
+            $vnp_IpAddr    = $request->ip();
 
             $inputData = [
                 "vnp_Version" => "2.1.0",
@@ -41,22 +55,18 @@ class PaymentBuyNowController extends Controller
                 "vnp_Command" => "pay",
                 "vnp_CreateDate" => date('YmdHis'),
                 "vnp_CurrCode" => "VND",
-                "vnp_IpAddr" => $request->ip(),
+                "vnp_IpAddr" => $vnp_IpAddr,
                 "vnp_Locale" => "vn",
-                "vnp_OrderInfo" => "Thanh toán hóa đơn",
-                "vnp_OrderType" => "billpayment",
+                "vnp_OrderInfo" => $vnp_OrderInfo,
+                "vnp_OrderType" => $vnp_OrderType,
                 "vnp_ReturnUrl" => $vnp_Returnurl,
                 "vnp_TxnRef" => $vnp_TxnRef
             ];
 
-
-
-
-            // Tạo chữ ký bảo mật (checksum)
             ksort($inputData);
             $query = "";
-            $i = 0;
             $hashdata = "";
+            $i = 0;
             foreach ($inputData as $key => $value) {
                 if ($i == 1) {
                     $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
@@ -67,9 +77,8 @@ class PaymentBuyNowController extends Controller
                 $query .= urlencode($key) . "=" . urlencode($value) . '&';
             }
 
-            $vnp_Url = $vnp_Url . "?" . $query;
-            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret); // Tạo mã bảo mật
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url = $vnp_Url . "?" . $query . "vnp_SecureHash=" . $vnpSecureHash;
 
             return response()->json([
                 "status" => true,
@@ -121,24 +130,19 @@ class PaymentBuyNowController extends Controller
             $resp   = file_get_contents($config["endpoint"], false, $context);
             $result = json_decode($resp, true);
 
-            Cache::put("formData_{$formData["bill_user_id"]}", [
-                "bill_product_id" =>  $formData["bill_product_id"],
-                "bill_user_id" => $formData["bill_user_id"],
-                "bill_payment_id" => $formData["bill_payment_id"],
-                "bill_price_total" => $formData["bill_price_total"],
-                "bill_quantity" => $formData["bill_quantity"],
-            ], now()->addMinutes(now()->addMinutes(60)));
+            // Cache::put("formData_{$formData["bill_user_id"]}", [
+            //     "bill_product_id" =>  $formData["bill_product_id"],
+            //     "bill_user_id" => $formData["bill_user_id"],
+            //     "bill_payment_id" => $formData["bill_payment_id"],
+            //     "bill_price_total" => $formData["bill_price_total"],
+            //     "bill_quantity" => $formData["bill_quantity"],
+            // ], now()->addMinutes(60));
 
-            Cache::put(
-                "app_id_user",
-                [
-                    "bill_user_id" =>   $formData["bill_user_id"]
-                ],
-                now()->addMinutes(now()->addMinutes(60))
-            );
-            Cache::put("app_id_pay", [
-                "apptransid" =>  $order["apptransid"]
-            ], now()->addMinutes(now()->addMinutes(60)));
+            // Cache::put(
+            //     "app_id_user",
+            //     ["bill_user_id" =>   $formData["bill_user_id"]],
+            //     now()->addMinutes(60)
+            // );
 
 
             return response()->json([
@@ -149,18 +153,20 @@ class PaymentBuyNowController extends Controller
                 ]
             ]);
         }
+
+        return response()->json(["status" => false, "message" => "Phương thức không hợp lệ"]);
     }
 
 
-    public function checkStatus()
+    public function checkZalo(Request $request)
     {
+        $app_trans_id = $request->input("app_id");
         $user_id = Cache::get("app_id_user");
         $formData = Cache::get("formData_{$user_id["bill_user_id"]}", now()->addMinutes(60));
-        $app_trans_id = Cache::get("app_id_pay");
 
         $params = [
             "app_id" => env("ZALO_APP_ID"),
-            "app_trans_id" => $app_trans_id["apptransid"]
+            "app_trans_id" => $app_trans_id
         ];
 
         // Tạo MAC để ký
@@ -176,44 +182,110 @@ class PaymentBuyNowController extends Controller
         // Lấy dữ liệu JSON từ response
         $result = $res->json();
 
-        if ($formData && $app_trans_id) {
+        if ($app_trans_id) {
             // Kiểm tra xem bill đã tồn tại cho giao dịch này chưa
-            $bill = Bill::where('apptransid', $app_trans_id['apptransid'])->first();
+            $bill = Bill::where('apptransid', $app_trans_id)->first();
+
 
             // Nếu chưa tồn tại, tạo bill mới
-            if (!$bill) {
-                $bill = Bill::create([
-                    "product_id" => $formData["bill_product_id"],
-                    "user_id" => $formData["bill_user_id"],
-                    "payment_id" => $formData["bill_payment_id"],
-                    "bill_price_total" => $formData["bill_price_total"],
-                    "bill_quantity" => $formData["bill_quantity"],
-                    "apptransid" => $app_trans_id["apptransid"]
+            if ($bill) {
+                return response()->json([
+                    "status" => true,
+                    "bill" => $bill,
+                    "message" => "client refresh after payment success",
                 ]);
+            }
 
-                $getProductQty = Product::where("product_id", $formData["bill_product_id"])->pluck("product_quantity")->first();
 
-                if ($getProductQty >= $formData["bill_quantity"]) {
-                    Product::where('product_id', $formData["bill_product_id"])
-                        ->update(['product_quantity' => DB::raw('product_quantity - ' .  $formData["bill_quantity"])]);
-                } else {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "thất bại",
-                        "error" => "số lượng bị lỗi"
-                    ]);
-                }
+            $bill = Bill::create([
+                "product_id" => $formData["bill_product_id"],
+                "user_id" => $formData["bill_user_id"],
+                "payment_id" => $formData["bill_payment_id"],
+                "bill_price_total" => $formData["bill_price_total"],
+                "bill_quantity" => $formData["bill_quantity"],
+                "apptransid" => $app_trans_id
+            ]);
+
+            $getProductQty = Product::where("product_id", $formData["bill_product_id"])->pluck("product_quantity")->first();
+
+            if ($getProductQty >= $formData["bill_quantity"]) {
+                Product::where('product_id', $formData["bill_product_id"])
+                    ->update(['product_quantity' => DB::raw('product_quantity - ' .  $formData["bill_quantity"])]);
+            } else {
+                return response()->json([
+                    "status" => false,
+                    "message" => "thất bại",
+                    "error" => "số lượng bị lỗi"
+                ]);
             }
 
             Cache::forget('formData');
             return response()->json([
                 "status" => true,
                 "bill" => $bill,
-                "apptransid" => $app_trans_id["apptransid"],
                 "message" => "Thành công"
             ]);
         } else {
             Cache::forget('formData');
+            return response()->json([
+                "status" => false,
+                "message" => "Thất bại",
+                "error" => $result['return_message'] ?? 'Không có thông tin lỗi'
+            ]);
+        }
+    }
+
+    public function checkVNpay(Request $request)
+    {
+        $responseCode = $request->input("responseCode");
+        $transactionStatus  = $request->input("transactionStatus");
+        $vnp_TransactionNo  = $request->input("vnp_TransactionNo");
+
+        $user_id = Cache::get("app_id_user");
+        $formData = Cache::get("formData_{$user_id["bill_user_id"]}", now()->addMinutes(60));
+
+        if ($transactionStatus == "00" && $responseCode == "00") {
+
+            $productExists = Bill::where('apptransid', $vnp_TransactionNo)->first();
+
+            if ($productExists) {
+                return response()->json([
+                    "status" => true,
+                    "message" => "Thanh toán thành công1",
+                    "bill" => $formData
+                ]);
+            }
+
+            $bill = Bill::create([
+                "product_id" => $formData["bill_product_id"],
+                "user_id" => $formData["bill_user_id"],
+                "payment_id" => $formData["bill_payment_id"],
+                "bill_price_total" => $formData["bill_price_total"],
+                "bill_quantity" => $formData["bill_quantity"],
+                "apptransid" => $vnp_TransactionNo
+            ]);
+
+            $getProductQty = Product::where("product_id", $formData["bill_product_id"])->pluck("product_quantity")->first();
+
+            if ($getProductQty >= $formData["bill_quantity"]) {
+                Product::where('product_id', $formData["bill_product_id"])
+                    ->update(['product_quantity' => DB::raw('product_quantity - ' .  $formData["bill_quantity"])]);
+            } else {
+                return response()->json([
+                    "status" => false,
+                    "message" => "thất bại",
+                    "error" => "số lượng bị lỗi"
+                ]);
+            }
+
+            Cache::forget('formData');
+
+            return response()->json([
+                "status" => true,
+                "message" => "Thanh toán thành công2",
+                "bill" => $bill
+            ]);
+        } else {
             return response()->json([
                 "status" => false,
                 "message" => "Thất bại",

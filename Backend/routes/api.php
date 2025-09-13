@@ -81,6 +81,9 @@ Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAdd
 /* insert code coupon*/
 Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
 
-/* payment buy now*/
+/*********************************  payment buy now          ********************/
 Route::post('/checkout/buy-now', [PaymentBuyNowController::class, 'buyNow']);
-Route::post('/zalo/check-status', [PaymentBuyNowController::class, 'checkStatus']);
+/* payment buy now zalo*/
+Route::post('/zalo/check-zalo', [PaymentBuyNowController::class, 'checkZalo']);
+/* payment buy now vnpay*/
+Route::post('/vnpay/check-vnpay', [PaymentBuyNowController::class, 'checkVNpay']);
