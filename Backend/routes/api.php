@@ -8,6 +8,7 @@ use App\Http\Controllers\CouponsController;
 use App\Http\Controllers\FeatureAddController;
 use App\Http\Controllers\FeatureDeleteController;
 use App\Http\Controllers\FeatureSearchController;
+use App\Http\Controllers\PaymentBuynowController;
 use App\Http\Controllers\ProductController;
 
 /**Auth */
@@ -79,3 +80,7 @@ Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAdd
 
 /* insert code coupon*/
 Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
+
+/* payment buy now*/
+Route::post('/checkout/buy-now', [PaymentBuyNowController::class, 'buyNow']);
+Route::post('/zalo/check-status', [PaymentBuyNowController::class, 'checkStatus']);
