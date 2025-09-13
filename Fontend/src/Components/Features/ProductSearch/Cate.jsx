@@ -35,10 +35,10 @@ export default function CateSearch() {
     axios
       .get(`http://localhost:8000/api/product/${encodeURIComponent(nameCate)}`)
       .then((res) => {
-        setCate(res.data.data); // Laravel paginate -> nằm trong `data.data`
+        setCate(res.data); // Laravel paginate -> nằm trong `data.data`
         localStorage.setItem(
           "cache_search_cate",
-          JSON.stringify(res.data.data)
+          JSON.stringify(res.data || [])
         );
         setLoading(false);
       })
@@ -57,7 +57,7 @@ export default function CateSearch() {
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
       <p className="bg-white text-center p-3 text-xl font-bold">
-        Kết quả tìm kiếm:
+        Kết quả tìm kiếm: "{nameCate ?? ""}"
       </p>
       <p>
         <Link onClick={() => navigate(-1)}>Quay lại</Link>
@@ -67,7 +67,7 @@ export default function CateSearch() {
           <ClipLoader size={40} color="#36d7b7" loading={loading} />
         </div>
       ) : (
-        <ul className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 place-items-center relative gap-x-10">
+        <ul className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 place-items-center relative z-20 gap-x-10">
           {cate.length === 0 ? (
             <p className="text-gray-500">Không có sản phẩm nào.</p>
           ) : (

@@ -1,26 +1,30 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { TiTickOutline } from "react-icons/ti";
-import { CiShoppingCart } from "react-icons/ci";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Paginate } from "../Paginate/Paginate";
+import GetProducts from "../GetProducts/GetProducts";
 
 export default function UserSearch() {
   const [userInput, setUserInput] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const location = useLocation();
   const navigate = useNavigate();
   const termSearch = location.state?.searchTemp;
   const selectedHistory = location.state?.dataHistory;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);
+
+  const itemsPerPage = 10;
+
+  const lastPage = Math.ceil(userInput.length / itemsPerPage);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = userInput.slice(indexOfFirstItem, indexOfLastItem);
 
   useEffect(() => {
     if (!termSearch || termSearch.trim() === "") return;
 
-    console.log(termSearch);
     setLoading(true);
     axios
       .get(
@@ -29,8 +33,8 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data);
-        setLastPage(res.last_page);
+        setUserInput(res.data || []);
+        setCurrentPage(1); // Reset to first page on new search
         setLoading(false);
       })
       .catch((e) => {
@@ -44,7 +48,6 @@ export default function UserSearch() {
     if (!selectedHistory || selectedHistory.trim() === "") return;
 
     setLoading(true);
-
     axios
       .get(
         `http://localhost:8000/api/product/history/${encodeURIComponent(
@@ -52,83 +55,48 @@ export default function UserSearch() {
         )}`
       )
       .then((res) => {
-        setUserInput(res.data.data);
-        setLastPage(res.last_page);
+        setUserInput(res.data || []);
+        setCurrentPage(1);
         setLoading(false);
       })
       .catch((e) => {
         setUserInput([]);
         setLoading(false);
-
         console.error("Error history term:", e);
       });
   }, [selectedHistory, navigate]);
 
+  useEffect(() => {
+    if (currentPage < 1) {
+      setCurrentPage(1);
+    } else if (currentPage > lastPage && lastPage > 0) {
+      setCurrentPage(lastPage);
+    }
+  }, [currentPage, lastPage]);
+
   return (
-    <>
-      <section className="md:w-[1400px] mx-auto m-[50px]">
-        {(loading && (
-          <div className="text-center flex justify-center mt-[100px]">
-            <ClipLoader size={40} color="#36d7b7" loading={loading} />
-          </div>
-        )) || (
-          <p className="font-bold text-2xl bg-white w-[100%] h-[100%] text-center p-5 mt-[5px] mr-[0] mb-[10px] ml-[0]">
-            Kết quả tìm kiếm:
-          </p>
-        )}
+    <section className="md:w-[1400px] mx-auto m-[50px] relative z-30">
+      {loading ? (
+        <div className="text-center flex justify-center mt-[100px]">
+          <ClipLoader size={40} color="#36d7b7" loading={loading} />
+        </div>
+      ) : (
+        <p className="font-bold text-2xl bg-white w-[100%] h-[100%] text-center p-5 mt-[5px] mr-[0] mb-[10px] ml-[0]">
+          Kết quả tìm kiếm: "{termSearch || selectedHistory}"
+        </p>
+      )}
 
-        <ul className="grid grid-cols-5 gap-5  ">
-          {userInput.map((e) => (
-            <li
-              key={e.product_id}
-              className="w-full group block relative overflow-hidden border p-2 rounded shadow hover:shadow-lg transition"
-            >
-              <MdOutlineRemoveRedEye className="absolute top-2 right-1 text-xl opacity-0 border border-black group-hover:opacity-100 transition-opacity duration-300 ease-in-out pointer-events-none" />
+      <ul className="grid grid-cols-2 place-items-center gap-5 md:grid md:grid-cols-5">
+        <GetProducts products={currentItems} />
+      </ul>
 
-              <Link to="#">
-                <img
-                  src={`/Images/x/${e.product_image}`}
-                  className="mx-auto object-cover w-[173px] h-[173px]"
-                  alt=""
-                />
-                <h3 className="font-bold mt-2 truncate">
-                  {e.product_name ?? ""}
-                </h3>
-                <p>
-                  Giá:
-                  <span className="text-red-500 font-bold px-2">
-                    {Number(e.product_price).toLocaleString()} <sub>đ</sub>
-                  </span>
-                </p>
-                <p className="flex">
-                  <span>Trạng thái:</span>
-                  {e.product_quantity > 0 ? (
-                    <span className="text-green-500 flex">
-                      <TiTickOutline />
-                      Có sẵn
-                    </span>
-                  ) : (
-                    <span className="text-red-500">Hết hàng</span>
-                  )}
-                </p>
-                <p className="truncate max-w-[250px]">
-                  Mô tả:12321321321321321213213 {e.product_desc}
-                </p>
-              </Link>
-              <button className="hover:bg-orange-500 border border-black text-center p-2 flex">
-                Đặt ngay <CiShoppingCart />
-              </button>
-            </li>
-          ))}
-        </ul>
-        {lastPage && (
-          <Paginate
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            last_page={lastPage}
-          />
-        )}
-      </section>
-    </>
+      {lastPage > 0 && (
+        <Paginate
+          currentPage={currentPage}
+          lastPage={lastPage}
+          setCurrentPage={setCurrentPage}
+        />
+      )}
+    </section>
   );
 }

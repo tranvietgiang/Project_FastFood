@@ -1,12 +1,21 @@
-import { CiStar } from "react-icons/ci";
+import { useState } from "react";
+import { CiStar, CiShoppingCart } from "react-icons/ci";
 import { FaStar } from "react-icons/fa";
 import { IoIosOptions } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { MdOutlineShoppingCartCheckout } from "react-icons/md";
 import { IoIosGitCompare } from "react-icons/io";
 import { AiOutlineEye } from "react-icons/ai";
 import { FiHeart } from "react-icons/fi";
 import HandleIconEffect from "../Handle/HandleIconEffect";
+import { ModelProduct } from "../../PageOther/ModelProduct";
+import HandleCompare from "../Handle/HandleCompare";
+
 export default function GetProducts({ products }) {
+  const [modelOpen, setModelOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+
   return (
     <>
       {products
@@ -27,27 +36,43 @@ export default function GetProducts({ products }) {
              group-hover:translate-x-0 group-hover:opacity-100 
              transition-all duration-300 ease-out z-10 overflow-visible"
             >
-              <HandleIconEffect
-                icon={FiHeart}
-                tooltip="Yêu thích"
-                gradientFrom="from-red-500"
-                gradientTo="to-pink-500"
-                groupName="group/heart"
-              />
-              <HandleIconEffect
-                icon={AiOutlineEye}
-                tooltip="Xem nhanh"
-                gradientFrom="from-blue-500"
-                gradientTo="to-cyan-500"
-                groupName="group/eye"
-              />
-              <HandleIconEffect
-                icon={IoIosGitCompare}
-                tooltip="So sánh"
-                gradientFrom="from-green-500"
-                gradientTo="to-emerald-500"
-                groupName="group/compare"
-              />
+              <span>
+                <HandleIconEffect
+                  icon={FiHeart}
+                  tooltip="Yêu thích"
+                  gradientFrom="from-red-500"
+                  gradientTo="to-pink-500"
+                  groupName="group/heart"
+                />
+              </span>
+              <span
+                onClick={() => {
+                  setSelectedId(product?.product_id);
+                  setModelOpen(!modelOpen);
+                }}
+              >
+                <HandleIconEffect
+                  icon={AiOutlineEye}
+                  tooltip="Xem nhanh"
+                  gradientFrom="from-blue-500"
+                  gradientTo="to-cyan-500"
+                  groupName="group/eye"
+                />
+              </span>
+              <span
+                onClick={() => {
+                  setSelectedId(product?.product_id ?? null);
+                  setCompareOpen(true);
+                }}
+              >
+                <HandleIconEffect
+                  icon={IoIosGitCompare}
+                  tooltip="So sánh"
+                  gradientFrom="from-green-500"
+                  gradientTo="to-emerald-500"
+                  groupName="group/compare"
+                />
+              </span>
             </div>
 
             <Link
@@ -110,23 +135,55 @@ export default function GetProducts({ products }) {
                 )}
               </div>
 
-              <p className="relative z-[800]  mt-3">
+              <p className="relative z-[500] mt-3">
                 {product.product_variant_name ? (
-                  <button className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto  hover:bg-red-600 duration-300 transition-color">
+                  <button
+                    onClick={(a) => {
+                      a.preventDefault();
+                      a.stopPropagation();
+                      setModelOpen(!modelOpen);
+                      setSelectedId(product?.product_id ?? null);
+                    }}
+                    className="flex items-center gap-1 rounded-md border-2 border-red-600 p-1 px-3 mx-auto  hover:bg-red-600 duration-300 transition-color"
+                  >
                     Tùy chọn <IoIosOptions />
                   </button>
                 ) : (
-                  <button className="bg-red-500 text-white p-1 px-3 rounded-md  hover:bg-red-700">
-                    <span className="flex items-center justify-center gap-2">
-                      Đặt Ngay
-                      <IoIosOptions className="w-4 h-4" />
-                    </span>
-                  </button>
+                  <div className="md:flex place-content-center justify-between">
+                    <button className="justify-around bg-red-500 text-white p-1 px-3 rounded-md  hover:bg-red-700 md:mb-0 mb-2">
+                      <span className="flex items-center justify-center gap-2">
+                        Đặt Ngay
+                        <MdOutlineShoppingCartCheckout className="w-4 h-4" />
+                      </span>
+                    </button>
+                    <button className="justify-around bg-green-500 text-white p-1 px-3 rounded-md  hover:bg-green-600">
+                      <span className="flex items-center justify-center gap-2">
+                        Cart
+                        <CiShoppingCart className="w-4 h-4" />
+                      </span>
+                    </button>
+                  </div>
                 )}
               </p>
             </Link>
           </li>
         ))}
+
+      <div>
+        <ModelProduct
+          productId={selectedId}
+          isOpen={modelOpen}
+          setIsOpen={setModelOpen}
+        />
+      </div>
+
+      <div>
+        <HandleCompare
+          isOpen={compareOpen}
+          setOpen={setCompareOpen}
+          productId={selectedId}
+        />
+      </div>
     </>
   );
 }
