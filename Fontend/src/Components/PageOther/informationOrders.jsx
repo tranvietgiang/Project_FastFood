@@ -21,6 +21,8 @@ export default function InformationOrders() {
   const priceProductRef = useRef();
   const priceTempRef = useRef();
   const priceTotalRef = useRef();
+  const nameRef = useRef();
+  const QtyRef = useRef();
 
   useEffect(() => {
     const order = localStorage.getItem("packageOrder");
@@ -30,6 +32,7 @@ export default function InformationOrders() {
     } else {
       navigate("/auth/login");
     }
+    console.log(user);
 
     if (order) {
       setOrders(JSON.parse(order));
@@ -100,40 +103,58 @@ export default function InformationOrders() {
     return () => clearTimeout(loading);
   });
 
+  let checkPrice = finalPrice && userCoupon === appliedCoupon;
+
   const handlePayment = async () => {
-    // if (
-    //   priceProductRef.current.textContent !=
-    //   Number(getOrder?.priceOrder).toLocaleString()
-    // ) {
-    //   navigate("/notFile");
-    //   console.log(
-    //     priceProductRef.current.textContent,
-    //     Number(getOrder?.priceOrder).toLocaleString()
-    //   );
-    //   return;
-    // }
+    if (
+      priceProductRef.current.textContent !=
+      Number(getOrder?.priceOrder).toLocaleString()
+    ) {
+      navigate("/notFile");
+      return;
+    }
 
-    // if (finalPrice) {
-    //   if (
-    //     priceTempRef.current.textContent != Number(finalPrice).toLocaleString()
-    //   ) {
-    //     navigate("/notFile");
-    //   }
-    // } else {
-    //   if (
-    //     priceTempRef.current.textContent != Number(priceTotal).toLocaleString()
-    //   ) {
-    //     navigate("/notFile");
-    //     return;
-    //   }
-    // }
+    if (checkPrice) {
+      if (
+        priceTempRef.current.textContent != Number(finalPrice).toLocaleString()
+      ) {
+        navigate("/notFile");
+        return;
+      }
+    } else {
+      if (
+        priceTempRef.current.textContent != Number(priceTotal).toLocaleString()
+      ) {
+        navigate("/notFile");
+        return;
+      }
+    }
 
-    // if (
-    //   priceTotalRef.current.textContent != Number(priceTotal).toLocaleString()
-    // ) {
-    //   navigate("/notFile");
-    //   return;
-    // }
+    if (checkPrice) {
+      if (
+        priceTotalRef.current.textContent != Number(finalPrice).toLocaleString()
+      ) {
+        navigate("/notFile");
+        return;
+      }
+    } else {
+      if (
+        priceTotalRef.current.textContent != Number(priceTotal).toLocaleString()
+      ) {
+        navigate("/notFile");
+        return;
+      }
+    }
+
+    if (nameRef.current.textContent.trim() != getOrder?.nameOrder.trim()) {
+      navigate("/notFile");
+      return;
+    }
+
+    if (QtyRef.current.textContent != getOrder?.quantityOrder) {
+      navigate("/notFile");
+      return;
+    }
 
     setLoading(true);
 
@@ -153,6 +174,12 @@ export default function InformationOrders() {
 
     if (userCoupon && userCoupon !== appliedCoupon) {
       priceToPay = priceTotal;
+    }
+
+    if (userCoupon === appliedCoupon) {
+      localStorage.setItem("bill_coupon_id", userCoupon);
+    } else {
+      localStorage.removeItem("bill_coupon_id");
     }
 
     const data = {
@@ -183,9 +210,12 @@ export default function InformationOrders() {
       if (res.data.payment_url) {
         // Nếu là VNPAY
         window.location.href = res.data.payment_url;
-      } else if (res.data.payment.orderurl) {
+      } else if (res.data.orderurl) {
         // Nếu là ZaloPay
-        window.location.href = res.data.payment.orderurl;
+        window.location.href = res.data.orderurl;
+      } else if (res.data.payUrl) {
+        // Nếu là MoMo
+        window.location.href = res.data.payUrl;
       } else {
         console.log("Không có URL thanh toán trả về:", res.data);
       }
@@ -195,7 +225,6 @@ export default function InformationOrders() {
     }
   };
 
-  // console.log(a);
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -370,12 +399,17 @@ export default function InformationOrders() {
                       alt=""
                     />
                   </div>
-                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  <span
+                    ref={QtyRef}
+                    className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+                  >
                     {getOrder?.quantityOrder ?? 0}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium">{getOrder?.nameOrder ?? ""}</h3>
+                  <h3 ref={nameRef} className="font-medium">
+                    {getOrder?.nameOrder ?? ""}
+                  </h3>
                 </div>
                 <span className="font-medium text-red-500">
                   <span ref={priceProductRef}>
@@ -406,20 +440,36 @@ export default function InformationOrders() {
                     }}
                   >
                     <option value={null}>Chọn mã</option>
+
                     {getCouponUserList
-                      .filter((v) => v.coupon_user_minimum_price <= priceTotal)
-                      .map((e, index) => (
-                        <option
-                          className={`${userCoupon == e.coupon_user_id ? "text-red-500 font-bold" : ""}`}
-                          key={index}
-                          value={e.coupon_user_id}
-                        >
-                          <span className="inline-block font-bold text-lg">
-                            RT{e.coupon_user_id}
-                          </span>
-                          - {e.coupon_user_name ?? ""}
-                        </option>
-                      ))}
+                      .filter((v) => {
+                        const created = new Date(v.created_at);
+                        const a = created.toISOString().split("T")[0];
+                        const today = new Date().toISOString().split("T")[0];
+                        return (
+                          a >= today &&
+                          v.coupon_user_minimum_price <= priceTotal
+                        );
+                      })
+                      .map((e, index) => {
+                        return (
+                          <>
+                            <option
+                              className={`${userCoupon == e.coupon_user_id ? "text-red-500 font-bold" : ""}`}
+                              key={index}
+                              value={e.coupon_user_id}
+                            >
+                              <span
+                                className={`inline-block font-bold text-lg`}
+                              >
+                                RT{e.coupon_user_id}
+                              </span>
+                              - {e.coupon_user_name ?? ""}
+                            </option>
+                            ;
+                          </>
+                        );
+                      })}
                   </select>
                   <p>
                     {!confirm && userCoupon !== "" ? (
@@ -447,7 +497,7 @@ export default function InformationOrders() {
                   <span>Tạm tính</span>
                   <span className="font-medium text-red-500 text-[18px] inline-block">
                     <span ref={priceTempRef}>
-                      {finalPrice && userCoupon === appliedCoupon
+                      {checkPrice
                         ? Number(finalPrice).toLocaleString()
                         : Number(priceTotal).toLocaleString()}
                     </span>
@@ -458,7 +508,7 @@ export default function InformationOrders() {
                   <span>Tổng cộng</span>
                   <span className="font-medium text-red-600 text-[19px] inline-block">
                     <span ref={priceTotalRef}>
-                      {finalPrice && userCoupon === appliedCoupon
+                      {checkPrice
                         ? Number(finalPrice).toLocaleString()
                         : Number(priceTotal).toLocaleString()}
                     </span>

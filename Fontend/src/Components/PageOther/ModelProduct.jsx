@@ -1,14 +1,22 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { CiStar } from "react-icons/ci";
 import { AiOutlineCloseCircle } from "react-icons/ai";
-
+import { handleBuyNow } from "../Features/HandleBuyNow/HandleBuyNow";
+import { useNavigate } from "react-router-dom";
 export function ModelProduct({ productId, isOpen, setIsOpen }) {
   const [getProduct, setGetProduct] = useState([]);
   const [priceDiscount, setPriceDiscount] = useState(null);
   const [priceVariantPrice, setPriceVariantPrice] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectVariants, setSelectVariants] = useState("");
+  const [noteOrder, setNoteOrder] = useState(null);
+  const [quantityStore, setQuantityStore] = useState(null);
+
+  const navigate = useNavigate();
+  const quantityRef = useRef();
+  const priceRef = useRef();
+  const nameRef = useRef();
 
   const ClickIncrease = () => {
     setQuantity((pev) => pev + 1);
@@ -48,6 +56,8 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
             : res.data?.product_price * (1 - res.data?.percent_name / 100);
 
         setPriceDiscount(a);
+        setNoteOrder("");
+        setQuantity(1);
         reset();
       })
       .catch((e) => {
@@ -62,13 +72,19 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
     let variant = getProduct?.variants?.find(
       (e) => e.product_variant_name == selectVariants
     );
-
+    setQuantity(1);
     setPriceVariantPrice(variant?.product_variant_price ?? null);
   }, [selectVariants, getProduct]);
 
   const percent = getProduct?.first?.percent_name ?? getProduct?.percent_name;
   const originalPrice =
     getProduct?.first?.product_price ?? getProduct?.product_price;
+
+  const maxQuantity =
+    quantityStore ??
+    getProduct?.product_quantity ??
+    getProduct?.first?.product_quantity;
+  const isDisabled = quantity > maxQuantity;
 
   return (
     <div
@@ -81,7 +97,7 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
         className="bg-white rounded-lg shadow-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col md:flex-row bg-white p-4 rounded-lg shadow max-h-[50%]">
+        <div className="flex flex-col md:flex-row bg-white p-4 rounded-lg shadow">
           <div className="md:w-1/2 flex flex-col items-center">
             <img
               className="md:w-[250px] w-[150px] h-auto object-cover mb-4 mt-8"
@@ -95,7 +111,7 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
           {/* Thông tin sản phẩm */}
           <div className="md:w-1/2 md:pl-8 flex flex-col gap-4 md:mt-0 mt-[20px]">
             <div>
-              <h1 className="text-xl font-bold max-w-[400px]">
+              <h1 ref={nameRef} className="text-xl font-bold max-w-[400px]">
                 {getProduct?.first?.product_name || getProduct.product_name}
               </h1>
               <div className="flex items-center text-yellow-500">
@@ -115,6 +131,7 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
                 <span
                   className={`mx-2
                   ${
+                    (quantityStore && quantityStore > 0) ||
                     getProduct?.first?.product_quantity > 0 ||
                     getProduct.product_quantity > 0
                       ? "text-green-600"
@@ -122,9 +139,16 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
                   }
                   `}
                 >
-                  {getProduct?.first?.product_quantity > 0 ||
+                  {(quantityStore && quantityStore > 0) ||
+                  getProduct?.first?.product_quantity > 0 ||
                   getProduct.product_quantity > 0
-                    ? "Sẵn trong kho"
+                    ? `Sẵn trong kho (
+                  ${
+                    quantityStore
+                      ? quantityStore
+                      : getProduct?.product_quantity ||
+                        getProduct?.first?.product_quantity
+                  } )`
                     : "Hết hàng"}
                 </span>
               </p>
@@ -135,21 +159,29 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
               {priceVariantPrice != null ? (
                 // variant
                 <span className="text-red-600 text-2xl font-bold">
-                  {Number(priceVariantPrice).toLocaleString()}đ
+                  <span ref={priceRef ?? null}>
+                    {Number(priceVariantPrice).toLocaleString()}
+                  </span>
+                  đ
                 </span>
               ) : getProduct?.first?.percent_name ||
                 getProduct?.percent_name ? (
                 // có giảm giá
                 <span className="text-red-600 text-2xl font-bold">
-                  {Number(priceDiscount).toLocaleString()}đ
+                  <span ref={priceRef ?? null}>
+                    {Number(priceDiscount).toLocaleString()}
+                  </span>
+                  đ
                 </span>
               ) : (
                 // giá gốc
                 <span className="text-red-600 text-2xl font-bold">
-                  {Number(
-                    getProduct?.first?.product_price ||
-                      getProduct?.product_price
-                  ).toLocaleString()}
+                  <span ref={priceRef ?? null}>
+                    {Number(
+                      getProduct?.first?.product_price ||
+                        getProduct?.product_price
+                    ).toLocaleString()}
+                  </span>
                   đ
                 </span>
               )}
@@ -175,7 +207,10 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
                     className={`mt-[-5px] ${
                       selectVariants ? "hover:text-red-500 " : ""
                     }`}
-                    onClick={() => setSelectVariants("")}
+                    onClick={() => {
+                      setSelectVariants("");
+                      setQuantityStore(null);
+                    }}
                   >
                     <AiOutlineCloseCircle className="text-md" />
                   </button>
@@ -184,7 +219,10 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
                   {getProduct?.variants?.map((e, i) => (
                     <button
                       key={i}
-                      onClick={() => setSelectVariants(e.product_variant_name)}
+                      onClick={() => {
+                        setSelectVariants(e.product_variant_name);
+                        setQuantityStore(e.product_variant_quantity);
+                      }}
                       className={`border p-2 rounded-lg  text-sm ${
                         selectVariants === e?.product_variant_name
                           ? "border-2 border-red-600"
@@ -202,6 +240,8 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
               <label className="text-sm font-medium">Ghi chú món ăn:</label>
               <input
                 type="text"
+                value={noteOrder}
+                onChange={(e) => setNoteOrder(e.target.value)}
                 className="border border-gray-300 rounded w-full p-2 mt-1 focus:outline-none focus:border-red-500"
                 placeholder="Nhập ghi chú..."
               />
@@ -215,7 +255,7 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
               >
                 -
               </button>
-              <span>{quantity}</span>
+              <span ref={quantityRef}>{quantity ?? null}</span>
               <button
                 onClick={ClickIncrease}
                 className="border px-3 py-1 rounded hover:bg-gray-100"
@@ -229,12 +269,35 @@ export function ModelProduct({ productId, isOpen, setIsOpen }) {
                 Thêm vào giỏ
               </button>
 
-              <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+              <button
+                onClick={() =>
+                  handleBuyNow({
+                    getProduct,
+                    priceDiscount,
+                    priceVariantPrice,
+                    quantity,
+                    selectVariants,
+                    noteOrder,
+                    quantityRef,
+                    priceRef,
+                    nameRef,
+                    navigate,
+                  })
+                }
+                disabled={isDisabled}
+                className={`${
+                  isDisabled
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600"
+                }
+                text-white px-4 py-2 rounded`}
+              >
                 Mua ngay
               </button>
             </div>
           </div>
         </div>
+
         <button
           className="absolute top-2 right-2 text-gray-500"
           onClick={() => setIsOpen(false)}
