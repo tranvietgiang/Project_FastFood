@@ -1,31 +1,28 @@
 import { useEffect, useState } from "react";
-import { MdOutlineMail } from "react-icons/md";
-import { Link } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader";
-
 import axios from "axios";
 import BillResultBuyNow from "./BillResultBuyNow";
-export default function ZaloPay() {
+
+export default function MomoResult() {
   const [status, setStatus] = useState(false);
   const [loading, setLoading] = useState(false);
   const [item, setItem] = useState([]);
 
   const token = localStorage.getItem("token");
   const urlParams = new URLSearchParams(window.location.search);
+  const transId = urlParams.get("transId");
+  const message = urlParams.get("message");
   const getCoupon = localStorage.getItem("bill_coupon_id");
 
   useEffect(() => {
+    if (!transId) return;
     setLoading(true);
-    const apptransid = urlParams.get("apptransid");
-
-    if (!apptransid) return;
-
     axios
       .post(
-        "http://localhost:8000/api/zalo/check-zalo",
+        "http://localhost:8000/api/momo/check-momo",
         {
           getCoupon: getCoupon,
-          app_id: apptransid,
+
+          transId: transId,
         },
         {
           headers: {
@@ -35,7 +32,7 @@ export default function ZaloPay() {
         }
       )
       .then((res) => {
-        if (res.data.status) {
+        if (res.data.status && message == "Successful.") {
           setStatus(true);
           setItem(res.data.bill);
           localStorage.removeItem("bill_coupon_id");

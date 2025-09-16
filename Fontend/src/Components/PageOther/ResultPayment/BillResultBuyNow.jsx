@@ -1,7 +1,30 @@
 import { Link } from "react-router-dom";
 import { MdOutlineMail } from "react-icons/md";
 import ClipLoader from "react-spinners/ClipLoader";
+import axios from "axios";
 export default function BillResultBuyNow({ item, loading, status }) {
+  const token = localStorage.getItem("token");
+  const handleSendEmail = () => {
+    axios
+      .post(
+        "http://localhost:8000/api/send-bill",
+        { item },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      ) // gửi dữ liệu bill
+      .then((res) => {
+        alert(res.data.message);
+      })
+      .catch((e) => {
+        console.log("error", e);
+        alert("Gửi email thất bại!");
+      });
+  };
+
   return (
     <>
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
@@ -35,11 +58,11 @@ export default function BillResultBuyNow({ item, loading, status }) {
               <div className="flex justify-between">
                 <span>Phương thức thanh toán:</span>
                 <span>
-                  {item.payment_id === 2
+                  {(item.bill_payment_id ?? item.payment_id === 2)
                     ? "VN-PAY"
-                    : item.payment_id === 3
+                    : (item.bill_payment_id ?? item.payment_id === 3)
                       ? "ZALO-PAY"
-                      : item.payment_id === 4
+                      : (item.bill_payment_id ?? item.payment_id === 4)
                         ? "MoMo"
                         : "COD"}
                 </span>
@@ -48,7 +71,7 @@ export default function BillResultBuyNow({ item, loading, status }) {
               <div className="flex items-center justify-between">
                 <span>Xuất bills về email:</span>
                 <button className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                  <MdOutlineMail size={20} />
+                  <MdOutlineMail onClick={handleSendEmail} size={20} />
                 </button>
               </div>
             </div>

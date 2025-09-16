@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\History_search;
 use App\Models\ProductCompare;
+use App\Models\UserCompare;
 use Illuminate\Http\Request;
+use PhpParser\Node\Stmt\Else_;
 
 class FeatureDeleteController extends Controller
 {
@@ -22,17 +24,22 @@ class FeatureDeleteController extends Controller
         }
     }
 
-    public function deleteCompareId($compareId, $userId)
+    public function deleteCompareId(Request $request)
     {
+        $compareId = $request->input("productId") ?? null;
+        $userId =  $request->input("userId") ?? null;
+
         if (isset($compareId) && isset($userId)) {
             ProductCompare::where("user_id", $userId)->where("product_id", $compareId)->delete();
-        }
 
-        $getCompare = ProductCompare::select("product_compares.*", "products.*")
-            ->Join("products", "product_compares.product_id", "=", "products.product_id")->limit(3)->get();
+            $getCompare = ProductCompare::select("product_compares.*", "products.*")
+                ->Join("products", "product_compares.product_id", "=", "products.product_id")
+                ->where("product_compares.user_id", $userId)
+                ->limit(3)->get();
 
-        if ($getCompare->count() > 0) {
-            return response()->json($getCompare);
+            if ($getCompare->count() > 0) {
+                return response()->json($getCompare);
+            }
         }
 
         return response()->json([], 500);
@@ -43,5 +50,6 @@ class FeatureDeleteController extends Controller
             ProductCompare::where("user_id", $userId)->delete();
             return response()->json([], 200);
         }
+        return response()->json([], 500);
     }
 }

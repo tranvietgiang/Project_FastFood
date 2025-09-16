@@ -6,54 +6,184 @@ import { Link } from "react-router-dom";
 export default function HandleCompare({ isOpen, setOpen, productId }) {
   const [getProduct, setGetProduct] = useState([]);
   const [errorCompare, setErrorCompare] = useState("");
-  const [userId, setUserId] = useState(null);
+  const [checkCompare, setCheckCompare] = useState(false);
+  const token = localStorage.getItem("token");
+  const userData = JSON.parse(localStorage.getItem("user")) ?? null;
+  let userId = null;
+  if (userData) {
+    userId = userData.id ?? null;
+  }
 
+  const handleCheckCompare = (e) => {
+    if (e < 2) {
+      setCheckCompare(false);
+    } else {
+      setCheckCompare(true);
+    }
+  };
+
+  // localStorage.removeItem("compare_guest");
+
+  // user exists
   useEffect(() => {
     if (!productId) return;
-
     setErrorCompare("");
 
-    setUserId(1);
-    axios
-      .get(`http://localhost:8000/api/products/add-compare/by-id/${productId}`)
-      .then((res) => {
-        setGetProduct(res.data);
-      })
-      .catch((e) => {
-        console.log("Error", e);
-        setErrorCompare("Bạn chỉ có thể so sánh sản phẩm trong cùng danh mục!");
-        setTimeout(() => {
-          setErrorCompare("");
-        }, 4000);
-      });
-  }, [productId]);
+    if (userId && token) {
+      axios
+        .post(
+          `http://localhost:8000/api/products/add-compare/by-id`,
+          {
+            productId,
+            userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-type": "application/json",
+            },
+          }
+        )
+        .then((res) => {
+          if (!!userId && !!token) {
+            setGetProduct(res.data);
+            localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
+            console.log(res.data.length);
+            if (res.data.length < 2) {
+              setCheckCompare(false);
+            } else {
+              setCheckCompare(true);
+            }
+          } else {
+            setGetProduct([]);
+          }
+        })
+        .catch(() => {
+          console.log("error", Error);
+        });
+    }
+  }, [productId, userId, token]);
 
-  // xoá 1 sp
+  useEffect(() => {
+    const addCompareGuest = async () => {
+      if (!productId || userId) return; // chỉ chạy cho guest
+
+      let compare = JSON.parse(localStorage.getItem("compare_guest")) ?? [];
+
+      if (compare) {
+        // Fetch lại toàn bộ danh sách để hiển thị
+        fetchGuestCompare(compare);
+      }
+      try {
+        // Lấy sản phẩm mới
+        const res = await axios.get(
+          `http://localhost:8000/api/products/compare-not-user/${productId}`
+        );
+        const newProduct = res.data; // giả sử trả về 1 product object
+        setCheckCompare(true);
+
+        // Nếu đã có sản phẩm trong compare → check category
+        if (compare.length > 0) {
+          const firstRes = await axios.get(
+            `http://localhost:8000/api/products/compare-not-user/${compare[0]}`
+          );
+          const firstProduct = firstRes.data;
+          let checkCate_id =
+            newProduct.selectedProduct.cate_id !=
+            firstProduct.selectedProduct.cate_id
+              ? true
+              : false;
+          if (checkCate_id) {
+            setErrorCompare("Chỉ được so sánh sản phẩm cùng danh mục!");
+            return;
+          }
+        } else {
+          setCheckCompare(false);
+        }
+
+        // Nếu chưa có thì thêm productId vào localStorage
+        if (!compare.includes(productId)) {
+          compare.push(productId);
+
+          localStorage.setItem("compare_guest", JSON.stringify(compare));
+        }
+
+        // Fetch lại toàn bộ danh sách để hiển thị
+        fetchGuestCompare(compare);
+      } catch (e) {
+        console.log("Lỗi khi thêm compare guest:", e);
+      }
+    };
+
+    addCompareGuest();
+  }, [productId, userId]);
+
+  // Hàm fetch danh sách guest compare
+  const fetchGuestCompare = async (ids = null) => {
+    const compare =
+      ids ?? JSON.parse(localStorage.getItem("compare_guest")) ?? [];
+    if (compare.length === 0) {
+      setGetProduct([]);
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/api/products/compare-list-guest",
+        { ids: compare }
+      );
+      setGetProduct(res.data);
+    } catch (e) {
+      console.log("Lỗi khi fetch danh sách compare guest:", e);
+    }
+  };
+
+  // xoá 1 user && user exists
   const handleRemove = (productId, userId) => {
+    if (!productId && !userId) return;
+
     axios
-      .get(
-        `http://localhost:8000/api/products/delete-compare/by-id/${productId}/${userId}`
-      )
+      .delete("http://localhost:8000/api/products/delete-compare/by-id", {
+        data: {
+          productId,
+          userId,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((res) => {
         setGetProduct(res.data);
+        handleCheckCompare(res.data.length);
+        localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
       })
-      .catch((e) => {
-        console.log("Error", e);
+      .catch(() => {
         setGetProduct([]);
       });
   };
 
+  useEffect(() => {
+    const userLogin_compare = JSON.parse(
+      localStorage.getItem("userLogin_compare")
+    );
+    if (userLogin_compare) {
+      setGetProduct(userLogin_compare);
+    }
+  }, []);
+
   const HandleRemoveAll = (userId) => {
+    if (!userId) return;
+
     axios
-      .get(
+      .delete(
         `http://localhost:8000/api/products/delete-compare-all/by-id/${userId}`
       )
       .then(() => {
-        localStorage.removeItem("cache_productCompare");
+        setCheckCompare(false);
         setGetProduct([]);
       })
-      .catch((e) => {
-        console.log("Error", e);
+      .catch(() => {
         setGetProduct([]);
       });
   };
@@ -80,7 +210,13 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
               <li key={e.product_id} className="relative border rounded-lg p-3">
                 <button
                   className="absolute top-2 right-2 text-gray-500"
-                  onClick={() => handleRemove(e.product_id, userId)}
+                  onClick={() => {
+                    if (!!userId && !!token) {
+                      handleRemove(e.product_id, userId);
+                    } else {
+                      handleRemove(e.product_id);
+                    }
+                  }}
                 >
                   <IoCloseOutline className="hover:text-red-500 md:text-lg" />
                 </button>
@@ -101,7 +237,10 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
 
           <div className="flex justify-between mt-4">
             <Link to={`/compare/ingredients`} state={{ id: userId }}>
-              <button className="px-4 py-2 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+              <button
+                disabled={!checkCompare}
+                className={`border rounded ${!checkCompare ? "bg-gray-500 cursor-not-allowed" : "border-red-500 text-red-500  hover:bg-red-500 hover:text-white"} px-4 py-2  `}
+              >
                 So sánh ngay
               </button>
             </Link>

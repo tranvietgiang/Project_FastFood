@@ -7,6 +7,7 @@ use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\CouponsController;
 use App\Http\Controllers\FeatureAddController;
 use App\Http\Controllers\FeatureDeleteController;
+use App\Http\Controllers\FeatureGetDataController;
 use App\Http\Controllers\FeatureSearchController;
 use App\Http\Controllers\PaymentBuynowController;
 use App\Http\Controllers\ProductController;
@@ -58,16 +59,21 @@ Route::get("/products/related/by-id/{idDetail}", [ProductController::class, "get
 Route::get("/products/view-recently/by-id/{idViewRecently}", [ProductController::class, "getProductViewRecently"]);
 
 /*Find-add-Compare */
-Route::get("/products/add-compare/by-id/{compareId}", [FeatureAddController::class, "AddCompareId"]);
+Route::post("/products/add-compare/by-id", [FeatureAddController::class, "AddCompareId"]);
+Route::get("/products/compare-not-user/{productId}", [FeatureGetDataController::class, "GestProductId"]);
+Route::post("/products/compare-list-guest", [FeatureGetDataController::class, "GestProductList"]);
 
 /*Delete compare */
-Route::get("/products/delete-compare/by-id/{compareId}/{userId}", [FeatureDeleteController::class, "deleteCompareId"]);
+Route::delete("/products/delete-compare/by-id", [FeatureDeleteController::class, "deleteCompareId"]);
+
+/*get compare */
+Route::get("/products/get-compare-user", [FeatureGetDataController::class, "getCompare"]);
 
 /*Delete compare-all */
-Route::get("/products/delete-compare-all/by-id/{userId}", [FeatureDeleteController::class, "deleteCompareAll"]);
+Route::delete("/products/delete-compare-all/by-id/{userId}", [FeatureDeleteController::class, "deleteCompareAll"]);
 
 /*Ingredients compare-all*/
-Route::get("/products/compare-ingredients/by-id/{userId}", [ProductController::class, "compareIngredients"]);
+Route::get("/products/compare-ingredients/by-id/{userId}", [FeatureGetDataController::class, "compareIngredients"]);
 
 /* Get Discount*/
 Route::get("/getDiscount", [ProductController::class, "getDiscount"]);
@@ -78,7 +84,7 @@ Route::get("/enter-the-coupon/{code}", [ProductController::class, "enterTheCoupo
 /* insert code coupon*/
 Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAddController::class, 'insertCouponUser']);
 
-/* insert code coupon*/
+/* get code coupon*/
 Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
 
 /*********************************  payment buy now          ********************/
@@ -87,3 +93,7 @@ Route::post('/checkout/buy-now', [PaymentBuyNowController::class, 'buyNow']);
 Route::post('/zalo/check-zalo', [PaymentBuyNowController::class, 'checkZalo']);
 /* payment buy now vnpay*/
 Route::post('/vnpay/check-vnpay', [PaymentBuyNowController::class, 'checkVNpay']);
+/* payment buy now vnpay*/
+Route::post('/momo/check-momo', [PaymentBuyNowController::class, 'checkMomo']);
+/* user click send mail y*/
+Route::middleware('auth:sanctum')->post('/send-bill', [PaymentBuyNowController::class, 'sendBill']);
