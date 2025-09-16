@@ -355,21 +355,7 @@ class ProductController extends Controller
     }
 
 
-    public function compareIngredients($userId)
-    {
-        $getCompareIngredients =
-            ProductCompare::select("product_compares.*", "products.*", "percents.percent_name")
-            ->Join("products", "product_compares.product_id", "=", "products.product_id")
-            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
-            ->where("product_compares.user_id", $userId)
-            ->orderBy("product_compares.created_at", "asc")
-            ->limit(3)->get();
 
-        // dd($getCompareIngredients);
-        if ($getCompareIngredients->count() > 0) {
-            return response()->json($getCompareIngredients);
-        }
-    }
 
     public function getDiscount()
     {

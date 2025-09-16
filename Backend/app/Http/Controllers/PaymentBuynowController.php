@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BillMail;
 use App\Models\Bill;
+use App\Models\Coupon;
+use App\Models\CouponUser;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use SebastianBergmann\Type\ObjectType;
 
 class PaymentBuyNowController extends Controller
@@ -130,27 +134,73 @@ class PaymentBuyNowController extends Controller
             $resp   = file_get_contents($config["endpoint"], false, $context);
             $result = json_decode($resp, true);
 
-            // Cache::put("formData_{$formData["bill_user_id"]}", [
-            //     "bill_product_id" =>  $formData["bill_product_id"],
-            //     "bill_user_id" => $formData["bill_user_id"],
-            //     "bill_payment_id" => $formData["bill_payment_id"],
-            //     "bill_price_total" => $formData["bill_price_total"],
-            //     "bill_quantity" => $formData["bill_quantity"],
-            // ], now()->addMinutes(60));
 
-            // Cache::put(
-            //     "app_id_user",
-            //     ["bill_user_id" =>   $formData["bill_user_id"]],
-            //     now()->addMinutes(60)
-            // );
 
 
             return response()->json([
                 "status" => true,
                 "message" => "Tạo đơn hàng thành công",
-                "payment" => [
-                    "orderurl" => $result["orderurl"] ?? null,  // link mở cổng ngân hàng
-                ]
+                "orderurl" => $result["orderurl"] ?? null,  // link mở cổng ngân hàng
+
+            ]);
+        } else if ($formData["bill_payment_id"] == 4) {
+
+            $endpoint    = "https://test-payment.momo.vn/v2/gateway/api/create";
+            $partnerCode = 'MOMOBKUN20180529';
+            $accessKey   = 'klm05TvNBzhg7h7j';
+            $secretKey   = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
+
+            $orderInfo   = "Thanh toán qua ATM MoMo";
+            $amount      = $formData["bill_price_total"];
+            $orderId     = time() . "";
+            $redirectUrl = "http://localhost:5173/result-momo"; // frontend React
+            $ipnUrl      = "http://localhost:8000/api/momo/check-momo"; // backend callback
+            $extraData   = "";
+
+            $requestId   = time() . "";
+            $requestType = "payWithATM";
+
+            // raw data để tạo chữ ký
+            $rawHash = "accessKey=" . $accessKey
+                . "&amount=" . $amount
+                . "&extraData=" . $extraData
+                . "&ipnUrl=" . $ipnUrl
+                . "&orderId=" . $orderId
+                . "&orderInfo=" . $orderInfo
+                . "&partnerCode=" . $partnerCode
+                . "&redirectUrl=" . $redirectUrl
+                . "&requestId=" . $requestId
+                . "&requestType=" . $requestType;
+
+            $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+            $data = [
+                'partnerCode' => $partnerCode,
+                'partnerName' => "Test",
+                "storeId"     => "MomoTestStore",
+                'requestId'   => $requestId,
+                'amount'      => $amount,
+                'orderId'     => $orderId,
+                'orderInfo'   => $orderInfo,
+                'redirectUrl' => $redirectUrl,
+                'ipnUrl'      => $ipnUrl,
+                'lang'        => 'vi',
+                'extraData'   => $extraData,
+                'requestType' => $requestType,
+                'signature'   => $signature
+            ];
+
+            // gọi API MoMo bằng Laravel Http
+            $result = Http::withHeaders([
+                'Content-Type' => 'application/json'
+            ])->post($endpoint, $data);
+
+            $jsonResult = $result->json();
+
+            return response()->json([
+                "status"  => true,
+                "message" => "Tạo đơn hàng thành công",
+                "payUrl"  => $jsonResult['payUrl'] ?? null
             ]);
         }
 
@@ -161,6 +211,7 @@ class PaymentBuyNowController extends Controller
     public function checkZalo(Request $request)
     {
         $app_trans_id = $request->input("app_id");
+        $getCoupon = $request->input("getCoupon") ?? null;
         $user_id = Cache::get("app_id_user");
         $formData = Cache::get("formData_{$user_id["bill_user_id"]}", now()->addMinutes(60));
 
@@ -194,6 +245,10 @@ class PaymentBuyNowController extends Controller
                     "bill" => $bill,
                     "message" => "client refresh after payment success",
                 ]);
+            }
+
+            if ($getCoupon != null) {
+                CouponUser::where("coupon_user_id", $getCoupon)->delete();
             }
 
 
@@ -238,6 +293,7 @@ class PaymentBuyNowController extends Controller
     public function checkVNpay(Request $request)
     {
         $responseCode = $request->input("responseCode");
+        $getCoupon = $request->input("getCoupon") ?? null;
         $transactionStatus  = $request->input("transactionStatus");
         $vnp_TransactionNo  = $request->input("vnp_TransactionNo");
 
@@ -264,6 +320,11 @@ class PaymentBuyNowController extends Controller
                 "bill_quantity" => $formData["bill_quantity"],
                 "apptransid" => $vnp_TransactionNo
             ]);
+
+
+            if ($getCoupon != null) {
+                CouponUser::where("coupon_user_id", $getCoupon)->delete();
+            }
 
             $getProductQty = Product::where("product_id", $formData["bill_product_id"])->pluck("product_quantity")->first();
 
@@ -292,5 +353,87 @@ class PaymentBuyNowController extends Controller
                 "error" => $result['return_message'] ?? 'Không có thông tin lỗi'
             ]);
         }
+    }
+
+    public function checkMomo(Request $request)
+    {
+        $data = $request->all();
+        $transId = $request->input("transId");
+        $getCoupon = $request->input("getCoupon") ?? null;
+        $user_id = Cache::get("app_id_user");
+        $formData = Cache::get("formData_" . $user_id['bill_user_id']);
+
+
+        if ($transId) {
+
+            $bill = Bill::where('apptransid', $transId)->first();
+
+            // Nếu chưa tồn tại, tạo bill mới
+            if ($bill) {
+                return response()->json([
+                    "status" => true,
+                    "bill" => $bill,
+                    "message" => "client refresh after payment success",
+                ]);
+            }
+
+
+            $bill = Bill::create([
+                "product_id" => $formData["bill_product_id"],
+                "user_id" => $formData["bill_user_id"],
+                "payment_id" => $formData["bill_payment_id"],
+                "bill_price_total" => $formData["bill_price_total"],
+                "bill_quantity" => $formData["bill_quantity"],
+                "apptransid" => $transId
+            ]);
+
+            if ($getCoupon != null) {
+                CouponUser::where("coupon_user_id", $getCoupon)->delete();
+            }
+
+            $getProductQty = Product::where("product_id", $formData["bill_product_id"])->pluck("product_quantity")->first();
+
+            if ($getProductQty >= $formData["bill_quantity"]) {
+                Product::where('product_id', $formData["bill_product_id"])
+                    ->update(['product_quantity' => DB::raw('product_quantity - ' .  $formData["bill_quantity"])]);
+            } else {
+                return response()->json([
+                    "status" => false,
+                    "message" => "thất bại",
+                    "error" => "số lượng bị lỗi"
+                ]);
+            }
+
+            return response()->json([
+                "status" => true,
+                "bill" => $bill,
+                "message" => "Thành công"
+            ]);
+        }
+
+        return response()->json(['message' => 'fail'], 400);
+    }
+
+
+    public function sendBill(Request $request)
+    {
+        $email = Auth::user()->email;
+        $billData = $request->input('item'); // lấy đúng cái mảng con
+
+        if (!$email) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Email không tồn tại'
+            ], 400);
+        }
+
+        // gửi mail
+        Mail::to($email)->send(new BillMail($billData));
+
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Hóa đơn đã được gửi về email ' . $email
+        ]);
     }
 }

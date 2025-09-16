@@ -6,15 +6,19 @@ use App\Models\Coupon;
 use App\Models\CouponUser;
 use App\Models\Product;
 use App\Models\ProductCompare;
+use App\Models\UserCompare;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class FeatureAddController extends Controller
 {
 
-    public function AddCompareId($compareId)
+    public function AddCompareId(Request $request)
     {
-        $getProduct = Product::where("product_id", $compareId)->first();
+        $productId = $request->input("productId") ?? null;
+        $userId = $request->input("userId") ?? null;
+
+        $getProduct = Product::where("product_id", $productId)->first();
 
         if (!$getProduct) {
             return response()->json(["message" => "Sản phẩm không tồn tại"], 500);
@@ -22,7 +26,7 @@ class FeatureAddController extends Controller
 
         $productCateId = $getProduct->cate_id;
 
-        $existingCompare = ProductCompare::where("user_id", 1)->get();
+        $existingCompare = ProductCompare::where("user_id", $userId)->get();
 
         if ($existingCompare->count() > 0) {
             $firstCompareProduct = Product::where("product_id", $existingCompare->first()->product_id)->first();
@@ -34,29 +38,29 @@ class FeatureAddController extends Controller
 
         ProductCompare::updateOrCreate(
             [
-                "product_id" => $compareId,
-                "user_id" => 1
+                "product_id" => $productId,
+                "user_id" => $userId
             ],
             [
                 "updated_at" => now()
             ]
         );
 
-
         $getCompare = ProductCompare::select("product_compares.*", "products.*")
             ->Join("products", "product_compares.product_id", "=", "products.product_id")->limit(4)->get();
 
         if ($getCompare) {
-
             return response()->json($getCompare);
         }
+
 
         return response()->json([], 500);
     }
 
+
     public function insertCouponUser(Request $request, $copiedId)
     {
-        // $copiedId = $request->all();
+        $displayDate = $request->input("displayDate") ?? null;
         if (!$copiedId) {
             return response()->json(["message" => "Lỗi hệ thống"], 400);
         }
@@ -70,7 +74,9 @@ class FeatureAddController extends Controller
                 'coupon_user_name' => $getCoupon->coupon_name,
                 "coupon_user_percent" => $getCoupon->coupon_percent,
                 "coupon_user_minimum_price" => $getCoupon->coupon_minimum_price,
-                "user_id" => Auth::id()
+                "user_id" => Auth::id(),
+                "created_at" => $displayDate
+                // "updated_at" => substr($getCoupon->getRawOriginal("updated_at"), 0, 10),
             ]);
 
             if (!$copiedId) {
