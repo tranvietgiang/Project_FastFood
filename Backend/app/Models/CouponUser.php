@@ -19,6 +19,7 @@ class CouponUser extends Model
         'coupon_user_name',
         "coupon_user_percent",
         "coupon_user_minimum_price",
-        "user_id"
+        "user_id",
+        "created_at"
     ];
 }
