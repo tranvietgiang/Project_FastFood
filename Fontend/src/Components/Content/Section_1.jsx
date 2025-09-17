@@ -1,9 +1,8 @@
-import { RiErrorWarningLine } from "react-icons/ri";
-
 import axios from "axios";
 import { useEffect } from "react";
 import { useState } from "react";
-import HandleCopy from "../Features/Handle/HandleCopy";
+import { Link } from "react-router-dom";
+import DateCoupon from "../Features/DateCoupon/DateCoupon";
 
 const section_1 = [
   { img: "chicken_1.png", name: "Gà rán" },
@@ -17,9 +16,10 @@ const section_1 = [
 export default function Section_1() {
   const [getCoupon, setCoupon] = useState([]);
   const [error, setError] = useState("");
-  const [copiedId, setCopiedId] = useState(null); // ID đang được sao chép
+  const [copiedId, setCopiedId] = useState(null);
   const [copiedText, setCopiedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0); // 👈 index coupon đang hiển thị
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [couponExistUser, setCouponExistUser] = useState([]);
 
   useEffect(() => {
     const cache_coupons = localStorage.getItem("cache_coupons");
@@ -43,29 +43,16 @@ export default function Section_1() {
   }, []);
 
   useEffect(() => {
-    if (!copiedId) return;
-
-    // console.log(copiedId);
-
-    const token_user = localStorage.getItem("token");
-
     axios
-      .post(
-        `http://localhost:8000/api/insert-coupon/${copiedId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token_user}`,
-          },
-        }
-      )
-      .then(() => {
-        console.log("thành công thêm code");
+      .get("http://localhost:8000/api/get-coupon-user")
+      .then((res) => {
+        setCouponExistUser(res.data.list);
       })
       .catch((e) => {
-        console.log("Error", e);
+        console.log("error", e);
       });
-  }, [copiedId]);
+  }, []);
+
   return (
     <>
       <section className="md:w-[1400px] mx-auto mt-4 px-4 ">
@@ -120,71 +107,19 @@ export default function Section_1() {
               </div>
             )}
 
-            {getCoupon.map((e) => {
-              const expiredDate = new Date(e.updated_at);
-              const dayPresent = new Date();
-              const displayDate = expiredDate.toLocaleDateString("vi-VN");
-              const isValid = expiredDate >= dayPresent;
-
-              return (
-                <li
-                  key={e.coupon_id}
-                  className="flex-none md:flex w-[100%] snap-center bg-red-100 rounded-lg overflow-hidden shadow-sm"
-                >
-                  <div className="w-24 flex items-center justify-center bg-red-200 font-bold text-gray-800">
-                    RTL{e.coupon_id}
-                  </div>
-
-                  <div className="flex-1 p-3 flex flex-col justify-between">
-                    <div>
-                      <p className="text-sm text-gray-800">{e.coupon_name}</p>
-                      <p className="flex items-center gap-1 text-red-500 text-xs font-semibold mt-1">
-                        <RiErrorWarningLine /> Điều kiện
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-600">
-                        {displayDate}
-                      </span>
-
-                      {copiedId === e.coupon_id && (
-                        <HandleCopy
-                          text={copiedId}
-                          setCopiedText={setCopiedText}
-                        />
-                      )}
-
-                      <button
-                        disabled={!isValid}
-                        onClick={() => {
-                          if (!isValid) return;
-
-                          setCopiedId(e.coupon_id);
-                          setCopiedText("Đã sao chép");
-
-                          setTimeout(() => {
-                            setCopiedId(null);
-                            setCopiedText("");
-                          }, 2000);
-                        }}
-                        className={`px-3 py-1 rounded-md text-sm ${
-                          isValid
-                            ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                        }`}
-                      >
-                        {copiedId === e.coupon_id
-                          ? "Đã sao chép"
-                          : isValid
-                            ? "Sao chép"
-                            : "Hết hạn"}
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            <DateCoupon
+              getCouponList={couponExistUser}
+              getCoupon={getCoupon}
+              copiedId={copiedId}
+              setCopiedText={setCopiedText}
+              setCopiedId={setCopiedId}
+            />
+            <Link
+              className="bg-gray-500 hover:bg-gray-700 text-white"
+              to="/user"
+            >
+              Mã giảm giá của tôi
+            </Link>
           </ul>
           {/* Tab indicator */}
           <div className="flex justify-center gap-2 mt-2 md:hidden">

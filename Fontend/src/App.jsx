@@ -17,6 +17,7 @@ import User from "./Components/PageOther/Users/User";
 import InformationOrders from "./Components/PageOther/informationOrders";
 import ZaloPay from "./Components/PageOther/ResultPayment/ZaloPay";
 import VNPayResult from "./Components/PageOther/ResultPayment/VNPayResult";
+import MomoResult from "./Components/PageOther/ResultPayment/MomoResult";
 function App() {
   return (
     <Router>
@@ -134,6 +135,7 @@ function App() {
           <Route path="/information-orders" element={<InformationOrders />} />
           <Route path="/result-zaloPay" element={<ZaloPay />} />
           <Route path="/result-vnPay" element={<VNPayResult />} />
+          <Route path="/result-momo" element={<MomoResult />} />
         </Routes>
       </div>
     </Router>

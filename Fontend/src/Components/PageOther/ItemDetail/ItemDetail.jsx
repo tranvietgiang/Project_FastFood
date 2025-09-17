@@ -2,15 +2,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CiStar } from "react-icons/ci";
 import { FaAngleRight } from "react-icons/fa6";
 import { AiOutlineCloseCircle } from "react-icons/ai";
-import { RiErrorWarningLine, RiLandscapeAiFill } from "react-icons/ri";
 import { useEffect, useRef, useState } from "react";
 import { Paginate } from "../../Features/Paginate/Paginate";
 import { RiCoupon2Line } from "react-icons/ri";
 import ProductRelated from "./ProductRelated";
 import RecentlyViews from "./RecentlyViews";
-import HandleCopy from "../../Features/Handle/HandleCopy";
 import { useMemo } from "react";
 import axios from "axios";
+import DateCoupon from "../../Features/DateCoupon/DateCoupon";
 
 export default function ItemDetail() {
   const location = useLocation();
@@ -34,6 +33,7 @@ export default function ItemDetail() {
   const [copiedId, setCopiedId] = useState(null);
   const [copiedText, setCopiedText] = useState("");
   const [quantityStore, setQuantityStore] = useState(null);
+  const [couponExistUser, setCouponExistUser] = useState([]);
 
   const ClickIncrease = () => {
     setQuantity((pev) => pev + 1);
@@ -49,6 +49,18 @@ export default function ItemDetail() {
     setSelectVariants("");
     // setPriceVariantPrice(null);
   };
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/get-coupon-user")
+      .then((res) => {
+        setCouponExistUser(res.data.list);
+        // console.log(res.data.list);
+      })
+      .catch((e) => {
+        console.log("error", e);
+      });
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -88,6 +100,7 @@ export default function ItemDetail() {
   // }, [selectVariants, getProduct]);
 
   const selectedVariant = useMemo(() => {
+    setQuantity(1);
     return getProduct?.variants?.find(
       (e) => e.product_variant_name === selectVariants
     );
@@ -128,6 +141,7 @@ export default function ItemDetail() {
         console.log("error-discount", e);
       });
   }, []);
+
   const [noteOrder, setNoteOrder] = useState(null);
 
   const quantityRef = useRef();
@@ -145,7 +159,6 @@ export default function ItemDetail() {
 
     if (nameRef.current?.innerText.trim() !== finalName.trim()) {
       navigate("/notFile");
-      console.log(nameRef.current?.innerText.trim(), finalName.trim());
       return;
     }
 
@@ -406,72 +419,19 @@ export default function ItemDetail() {
               </div>
             )}
             <p>Mã giảm giá</p>
-
-            {getDiscount.map((e) => {
-              const expiredDate = new Date(e.updated_at);
-              const dayPresent = new Date();
-              const displayDate = expiredDate.toLocaleDateString("vi-VN");
-              const isValid = expiredDate >= dayPresent;
-
-              return (
-                <li
-                  key={e.coupon_id}
-                  className="flex-none md:flex w-[100%] snap-center bg-red-100 rounded-lg overflow-hidden shadow-sm"
-                >
-                  <div className="w-24 flex items-center justify-center bg-red-200 font-bold text-gray-800">
-                    RTL{e.coupon_id}
-                  </div>
-
-                  <div className="flex-1 p-3 flex flex-col justify-between">
-                    <div>
-                      <p className="text-sm text-gray-800">{e.coupon_name}</p>
-                      <p className="flex items-center gap-1 text-red-500 text-xs font-semibold mt-1">
-                        <RiErrorWarningLine /> Điều kiện
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-600">
-                        {displayDate}
-                      </span>
-
-                      {copiedId === e.coupon_id && (
-                        <HandleCopy
-                          text={copiedId}
-                          setCopiedText={setCopiedText}
-                        />
-                      )}
-
-                      <button
-                        disabled={!isValid}
-                        onClick={() => {
-                          if (!isValid) return;
-
-                          setCopiedId(e.coupon_id);
-                          setCopiedText("Đã sao chép");
-
-                          setTimeout(() => {
-                            setCopiedId(null);
-                            setCopiedText("");
-                          }, 2000);
-                        }}
-                        className={`px-3 py-1 rounded-md text-sm ${
-                          isValid
-                            ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                        }`}
-                      >
-                        {copiedId === e.coupon_id
-                          ? "Đã sao chép"
-                          : isValid
-                            ? "Sao chép"
-                            : "Hết hạn"}
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            <Link
+              className="bg-gray-500 hover:bg-gray-700 text-white"
+              to="/user"
+            >
+              Mã giảm giá của tôi
+            </Link>
+            <DateCoupon
+              getCouponList={couponExistUser}
+              getCoupon={getDiscount}
+              copiedId={copiedId}
+              setCopiedText={setCopiedText}
+              setCopiedId={setCopiedId}
+            />
           </div>
 
           {/*các sự lựa chon khác*/}

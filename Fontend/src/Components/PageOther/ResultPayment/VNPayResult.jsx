@@ -17,14 +17,15 @@ export default function VNPayResult() {
     const vnp_TransactionStatus = urlParams.get("vnp_TransactionStatus");
     const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
     const vnp_TransactionNo = urlParams.get("vnp_TransactionNo");
+    const getCoupon = localStorage.getItem("bill_coupon_id");
 
-    console.log(vnp_TransactionNo);
     if (!vnp_TransactionStatus && !vnp_ResponseCode) return;
     setLoading(true);
     axios
       .post(
         "http://localhost:8000/api/vnpay/check-vnpay",
         {
+          getCoupon: getCoupon,
           transactionStatus: vnp_TransactionStatus,
           responseCode: vnp_ResponseCode,
           vnp_TransactionNo: vnp_TransactionNo,
@@ -40,6 +41,7 @@ export default function VNPayResult() {
         if (res.data.status) {
           setStatus(true);
           setItem(res.data.bill);
+          localStorage.removeItem("bill_coupon_id");
         } else {
           setStatus(false);
           setItem([]);

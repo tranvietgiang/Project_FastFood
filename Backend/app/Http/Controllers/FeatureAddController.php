@@ -7,6 +7,7 @@ use App\Models\CouponUser;
 use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\UserCompare;
+use App\Models\UserHeart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -99,5 +100,31 @@ class FeatureAddController extends Controller
                 return response()->json(["message" => "Mã Coupon này không tồn tại"], 400);
             }
         }
+    }
+
+    public function insertHeartUser(Request $request)
+    {
+        $productId = $request->input("selectId") ?? null;
+        $userId = $request->input("user_id") ?? null;
+
+        if (!$productId && !$userId) {
+            return response()->json([], 400);
+        }
+
+        $heartList = UserHeart::updateOrCreate(
+            [
+                "product_id" => $productId,
+                "user_id" => $userId
+            ],
+            [
+                "updated_at" => now()
+            ]
+        );
+
+        if ($heartList->count() > 0) {
+            return response()->json($heartList);
+        }
+
+        return response()->json([], 500);
     }
 }

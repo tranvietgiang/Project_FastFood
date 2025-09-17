@@ -7,6 +7,7 @@ export default function CompareIngredients() {
   const user_id = location.state?.id ?? null;
   const [getProducts, setProducts] = useState([]);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!user_id) return;
@@ -20,9 +21,42 @@ export default function CompareIngredients() {
         `http://localhost:8000/api/products/compare-ingredients/by-id/${user_id}`
       )
       .then((res) => {
+        if (user_id) {
+          setProducts(res.data);
+          localStorage.getItem(
+            JSON.stringify(res.data, "cache_compareIngredients")
+          );
+        }
+      })
+      .catch((e) => {
+        setProducts([]);
+        console.log("e", e);
+      });
+  }, [user_id]);
+
+  useEffect(() => {
+    if (user_id) return; // chỉ chạy khi KHÔNG login (guest)
+
+    const compare = JSON.parse(localStorage.getItem("compare_guest")) ?? [];
+    if (compare.length == 0) {
+      setProducts([]);
+      return;
+    }
+
+    const cache = localStorage.getItem("cache_compareNotIngredients");
+    if (cache) {
+      setProducts(JSON.parse(cache));
+    }
+
+    axios
+      .post("http://localhost:8000/api/products/compare-list-guest", {
+        ids: compare,
+      })
+      .then((res) => {
         setProducts(res.data);
-        localStorage.getItem(
-          JSON.stringify(res.data, "cache_compareIngredients")
+        localStorage.setItem(
+          "cache_compareNotIngredients",
+          JSON.stringify(res.data)
         );
       })
       .catch((e) => {
@@ -33,15 +67,26 @@ export default function CompareIngredients() {
 
   // xoá 1 sp
   const handleRemove = (productId, userId) => {
+    if (!productId && !userId) return;
+
     axios
-      .get(
-        `http://localhost:8000/api/products/delete-compare/by-id/${productId}/${userId}`
+      .delete(
+        `http://localhost:8000/api/products/delete-compare/by-id`,
+        {
+          productId,
+          userId,
+        },
+        {
+          Headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-type": "application/json",
+          },
+        }
       )
       .then((res) => {
         setProducts(res.data);
       })
-      .catch((e) => {
-        console.log("Error", e);
+      .catch(() => {
         setProducts([]);
       });
   };
@@ -79,9 +124,13 @@ export default function CompareIngredients() {
                 {e.product_name ?? ""}
               </h3>
 
-              {e.percent_name > 0 && (
+              {e.percent_name > 0 ? (
                 <p className="text-gray-400 line-through text-sm">
-                  {e.product_price}
+                  {Number(e.product_price).toLocaleString()}đ
+                </p>
+              ) : (
+                <p className="text-red-500 text-lg font-bold">
+                  {Number(e.product_price).toLocaleString()}đ
                 </p>
               )}
 
@@ -90,6 +139,7 @@ export default function CompareIngredients() {
                   {Number(
                     e.product_price * (1 - e.percent_name / 100)
                   ).toLocaleString()}
+                  đ
                 </p>
               )}
             </div>
