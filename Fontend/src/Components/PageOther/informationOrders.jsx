@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 import axios from "axios";
+import Address from "./Address/Address";
 
 export default function InformationOrders() {
   const [getOrder, setOrders] = useState({});
@@ -24,6 +25,8 @@ export default function InformationOrders() {
   const nameRef = useRef();
   const QtyRef = useRef();
 
+  // localStorage.removeItem("cache_province");
+
   useEffect(() => {
     const order = localStorage.getItem("packageOrder");
     const user = localStorage.getItem("user");
@@ -32,7 +35,6 @@ export default function InformationOrders() {
     } else {
       navigate("/auth/login");
     }
-    console.log(user);
 
     if (order) {
       setOrders(JSON.parse(order));
@@ -260,51 +262,26 @@ export default function InformationOrders() {
                   />
                 </div>
 
-                <input
-                  type="text"
-                  readOnly
-                  defaultValue={getUser?.fullname ?? ""}
-                  className="w-full p-3 border border-gray-300 rounded bg-gray-400"
-                />
-
                 <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    readOnly
+                    defaultValue={getUser?.fullname ?? ""}
+                    className="p-3 border  border-gray-300 rounded bg-gray-400"
+                  />
                   <div className="flex">
-                    <div className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l">
-                      <span className="w-5 h-3 bg-red-500 rounded-sm"></span>
-                    </div>
                     <input
                       type="tel"
                       value={getUser?.phone ?? ""}
-                      className="flex-1 p-3 border border-gray-300 rounded-r w-[100px]"
+                      className="flex-1 p-3 border border-gray-300 rounded-l w-[100px] border-r-0"
                     />
+                    <div className="flex items-center px-4 bg-gray-100 border  border-gray-300 rounded-r">
+                      <span className="w-5 h-3 bg-red-500 rounded-sm"></span>
+                    </div>
                   </div>
-
-                  <input
-                    type="text"
-                    placeholder="Địa chỉ (tùy chọn)"
-                    className="p-3 border border-gray-300 rounded"
-                  />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <select className="p-3 border border-gray-300 rounded bg-gray-50">
-                    <option>Tỉnh thành</option>
-                  </select>
-
-                  <select className="p-3 border border-gray-300 rounded bg-gray-50">
-                    <option>Quận huyện (tùy chọn)</option>
-                  </select>
-
-                  <select className="p-3 border border-gray-300 rounded bg-gray-50">
-                    <option>Phường xã (tùy chọn)</option>
-                  </select>
-                </div>
-
-                <textarea
-                  placeholder="Ghi chú (tùy chọn)"
-                  rows={3}
-                  className="w-full p-3 border border-gray-300 rounded"
-                />
+                <Address />
               </div>
             </div>
 

@@ -12,6 +12,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import HandleIconEffect from "../Features/Handle/HandleIconEffect";
 import { ModelProduct } from "../PageOther/ModelProduct";
 import HandleCompare from "../Features/Handle/HandleCompare";
+import { HandleHeart } from "../Features/Handle/HandleHeart";
 
 export default function Section_2() {
   const [getProduct, setGetProduct] = useState([]);
@@ -89,13 +90,15 @@ export default function Section_2() {
                         group-hover:translate-x-0 group-hover:opacity-100 
                         transition-all duration-300 ease-out z-10 overflow-visible"
                       >
-                        <HandleIconEffect
-                          icon={FiHeart}
-                          tooltip="Yêu thích"
-                          gradientFrom="from-red-500"
-                          gradientTo="to-pink-500"
-                          groupName="group/heart"
-                        />
+                        <span onClick={() => HandleHeart(e.product_id ?? null)}>
+                          <HandleIconEffect
+                            icon={FiHeart}
+                            tooltip="Yêu thích"
+                            gradientFrom="from-red-500"
+                            gradientTo="to-pink-500"
+                            groupName="group/heart"
+                          />
+                        </span>
                         <span
                           onClick={() => {
                             setSelectedId(e.product_id ?? null);

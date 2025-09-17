@@ -23,17 +23,18 @@ export default function Section_4() {
         console.log("Error", e);
       });
   }, []);
+
   return (
     <>
-      <section className="md:w-[1400px] mx-auto  mt-4">
+      <section className="md:w-[1400px] mx-auto mt-4">
         <div>
           <h1 className="md:text-[50px] text-[25px] font-bold md:font-semibold text-center py-5">
             Chào ngày mới
           </h1>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-10 w-full px-4 mt-4">
-          <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4  md:gap-x-10 gap-y-3">
+        <div className="flex flex-col md:flex-row gap-10 w-full px-4 mt-4 items-center md:items-start">
+          <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-x-10 gap-y-3">
             <GetProducts products={getProduct} />
           </ul>
 

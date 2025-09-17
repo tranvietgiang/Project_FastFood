@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function User() {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ export default function User() {
       .get("http://localhost:8000/api/get-coupon-user")
       .then((res) => {
         setCoupon(res.data);
-        console.log(res.data.count);
         setCouponCount(res.data.count);
       })
       .catch((e) => {
@@ -35,7 +34,6 @@ export default function User() {
     }
   }, [navigate]);
 
-  console.log(getCoupon);
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -58,6 +56,9 @@ export default function User() {
             Đơn hàng của bạn
           </li>
           <li className="cursor-pointer hover:text-orange-500">Đổi mật khẩu</li>
+          <li className="cursor-pointer hover:text-orange-500">
+            <Link to="/user-heart">Sản phẩm Yêu thích</Link>
+          </li>
           <li className="cursor-pointer hover:text-orange-500">
             Sổ địa chỉ (0)
           </li>
