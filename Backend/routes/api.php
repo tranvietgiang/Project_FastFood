@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +87,25 @@ Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAdd
 
 /* get code coupon*/
 Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
+
+/* user add heart*/
+Route::post('/insert-heart-user', [FeatureAddController::class, 'insertHeartUser']);
+/* user get add heart*/
+Route::get('/get-list-heart/{userId}', [FeatureGetDataController::class, 'getListHeart']);
+
+/* user get province*/
+Route::get('/get-province', [AddressController::class, 'getProvince']);
+/* user get getDistrict*/
+Route::get('/get-district/{provinceId}', [AddressController::class, 'getDistrict']);
+/* user get wards*/
+Route::get('/get-ward/{districtId}', [AddressController::class, 'getWard']);
+/* user inert-address*/
+Route::post('/inert-address-user', [AddressController::class, 'inertAddress']);
+
+/* user inert-address*/
+Route::get('/get-address', [AddressController::class, 'getAddress']);
+/* user inert-address*/
+Route::post('/inert-address-user', [AddressController::class, 'inertAddress']);
 
 /*********************************  payment buy now          ********************/
 Route::post('/checkout/buy-now', [PaymentBuyNowController::class, 'buyNow']);
