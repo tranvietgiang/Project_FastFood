@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\UserCompare;
+use App\Models\UserHeart;
 use Illuminate\Http\Request;
 
 class FeatureGetDataController extends Controller
@@ -76,5 +77,24 @@ class FeatureGetDataController extends Controller
             ->get();
 
         return response()->json($products);
+    }
+
+    public function getListHeart($userId)
+    {
+        $getHeartProducts = UserHeart::select(
+            "user_hearts.*",
+            "products.*",
+            "percents.percent_name",
+        )
+            ->join("products", "user_hearts.product_id", "=", "products.product_id")
+            ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
+            ->where("user_hearts.user_id", $userId)
+            ->orderBy("user_hearts.updated_at", "desc")
+            ->paginate(8); // ✅ đúng cú pháp
+
+        if ($getHeartProducts->count() > 0) {
+            return response()->json($getHeartProducts);
+        }
+        return response()->json([], 500);
     }
 }
