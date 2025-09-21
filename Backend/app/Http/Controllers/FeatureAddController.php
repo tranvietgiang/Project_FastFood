@@ -33,7 +33,7 @@ class FeatureAddController extends Controller
             $firstCompareProduct = Product::where("product_id", $existingCompare->first()->product_id)->first();
 
             if ($firstCompareProduct && $firstCompareProduct->cate_id !== $productCateId) {
-                return response()->json([], 500);
+                return response()->json(["error" => "không trùng sản phẩm"], 500);
             }
         }
 
@@ -48,7 +48,9 @@ class FeatureAddController extends Controller
         );
 
         $getCompare = ProductCompare::select("product_compares.*", "products.*")
-            ->Join("products", "product_compares.product_id", "=", "products.product_id")->limit(4)->get();
+            ->Join("products", "product_compares.product_id", "=", "products.product_id")
+            ->where("product_compares.user_id", $userId)
+            ->limit(3)->get();
 
         if ($getCompare) {
             return response()->json($getCompare);
@@ -111,18 +113,24 @@ class FeatureAddController extends Controller
             return response()->json([], 400);
         }
 
-        $heartList = UserHeart::updateOrCreate(
-            [
-                "product_id" => $productId,
-                "user_id" => $userId
-            ],
-            [
-                "updated_at" => now()
-            ]
-        );
 
-        if ($heartList->count() > 0) {
-            return response()->json($heartList);
+        if (UserHeart::where("product_id", $productId)->where("user_id", $userId)->exists()) {
+            return response()->json(
+                ["message_error" => "Sản phẩm này đã được thêm"],
+                409
+            );
+        }
+
+        $check = UserHeart::create([
+            "product_id" => $productId,
+            "user_id" => $userId
+        ]);
+
+        if ($check) {
+            $heartList = UserHeart::orderBy("created_at", "desc")->get();
+            if ($heartList->count() > 0) {
+                return response()->json($heartList);
+            }
         }
 
         return response()->json([], 500);

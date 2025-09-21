@@ -10,7 +10,7 @@ import { FiHeart } from "react-icons/fi";
 import HandleIconEffect from "../Handle/HandleIconEffect";
 import { ModelProduct } from "../../PageOther/ModelProduct";
 import HandleCompare from "../Handle/HandleCompare";
-
+import { HandleHeart } from "../Handle/HandleHeart";
 export default function GetProducts({ products }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function GetProducts({ products }) {
              group-hover:translate-x-0 group-hover:opacity-100 
              transition-all duration-300 ease-out z-10 overflow-visible"
             >
-              <span>
+              <span onClick={() => HandleHeart(product?.product_id ?? null)}>
                 <HandleIconEffect
                   icon={FiHeart}
                   tooltip="Yêu thích"

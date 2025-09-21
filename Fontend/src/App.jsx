@@ -18,6 +18,8 @@ import InformationOrders from "./Components/PageOther/informationOrders";
 import ZaloPay from "./Components/PageOther/ResultPayment/ZaloPay";
 import VNPayResult from "./Components/PageOther/ResultPayment/VNPayResult";
 import MomoResult from "./Components/PageOther/ResultPayment/MomoResult";
+import Above from "./Components/Footer/AboveFooter";
+import HeartPage from "./Components/PageOther/HeartPage";
 function App() {
   return (
     <Router>
@@ -29,6 +31,7 @@ function App() {
               <>
                 <Header />
                 <Content />
+                <Above />
                 <Footer />
               </>
             }
@@ -132,6 +135,17 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/user-heart"
+            element={
+              <>
+                <Header />
+                <HeartPage />
+                <Footer />
+              </>
+            }
+          />
+
           <Route path="/information-orders" element={<InformationOrders />} />
           <Route path="/result-zaloPay" element={<ZaloPay />} />
           <Route path="/result-vnPay" element={<VNPayResult />} />

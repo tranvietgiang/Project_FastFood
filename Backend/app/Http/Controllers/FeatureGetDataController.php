@@ -11,9 +11,12 @@ use Illuminate\Http\Request;
 class FeatureGetDataController extends Controller
 {
     //
-    public function getCompare($userId, $productId)
+    public function getCompare($userId)
     {
-        $getCompareUser = ProductCompare::where("user_id", $userId)->where("product_id", $productId)->get();
+        $getCompareUser = ProductCompare::select("product_compares.*", "products.*")
+            ->Join("products", "product_compares.product_id", "=", "products.product_id")
+            ->where("product_compares.user_id", $userId)
+            ->limit(3)->get();
         if ($getCompareUser->count() > 0) {
             return response()->json($getCompareUser);
         }
@@ -94,6 +97,8 @@ class FeatureGetDataController extends Controller
 
         if ($getHeartProducts->count() > 0) {
             return response()->json($getHeartProducts);
+        } else {
+            return response()->json([]);
         }
         return response()->json([], 500);
     }

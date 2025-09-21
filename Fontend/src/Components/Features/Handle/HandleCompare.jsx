@@ -15,7 +15,7 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
   }
 
   const handleCheckCompare = (e) => {
-    if (e < 2) {
+    if (e <= 2) {
       setCheckCompare(false);
     } else {
       setCheckCompare(true);
