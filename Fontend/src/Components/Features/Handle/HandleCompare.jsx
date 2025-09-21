@@ -22,47 +22,130 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
     }
   };
 
-  // localStorage.removeItem("compare_guest");
+  useEffect(() => {
+    handleCheckCompare();
+  }, []);
 
   // user exists
+  // useEffect(() => {
+  //   if (!productId) return;
+  //   setErrorCompare("");
+
+  //   if (userId && token) {
+  //     axios
+  //       .post(
+  //         `http://localhost:8000/api/products/add-compare/by-id`,
+  //         {
+  //           productId,
+  //           userId,
+  //         },
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //             "Content-type": "application/json",
+  //           },
+  //         }
+  //       )
+  //       .then((res) => {
+  //         if (!!userId && !!token) {
+  //           setGetProduct(res.data);
+  //           localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
+  //           console.log(res.data.length);
+  //           if (res.data.length < 2) {
+  //             setCheckCompare(false);
+  //           } else {
+  //             setCheckCompare(true);
+  //           }
+  //         } else {
+  //           // setGetProduct([]);
+  //         }
+  //       })
+  //       .catch((Error) => {
+  //         if (Error.response.data.error != "") {
+  //           setErrorCompare(Error.response.data.error);
+  //         }
+  //         console.log("error", Error);
+  //       });
+  //   }
+  // }, [productId, userId, token]);
+
   useEffect(() => {
-    if (!productId) return;
+    if (!productId || !userId || !token) return;
     setErrorCompare("");
 
-    if (userId && token) {
-      axios
-        .post(
+    const addToCompare = async () => {
+      try {
+        const addRes = await axios.post(
           `http://localhost:8000/api/products/add-compare/by-id`,
-          {
-            productId,
-            userId,
-          },
+          { productId, userId },
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-type": "application/json",
+              "Content-Type": "application/json", // Sửa header
             },
           }
-        )
-        .then((res) => {
-          if (!!userId && !!token) {
-            setGetProduct(res.data);
-            localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
-            console.log(res.data.length);
-            if (res.data.length < 2) {
-              setCheckCompare(false);
-            } else {
-              setCheckCompare(true);
-            }
-          } else {
-            setGetProduct([]);
+        );
+
+        const getRes = await axios.get(
+          `http://localhost:8000/api/products/get-compare-user/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        })
-        .catch(() => {
-          console.log("error", Error);
-        });
-    }
+        );
+
+        const fullData = getRes.data ?? addRes.data;
+        setGetProduct(fullData);
+        localStorage.setItem("userLogin_compare", JSON.stringify(fullData));
+
+        setCheckCompare(fullData.length >= 2);
+      } catch (error) {
+        setErrorCompare(
+          error.response?.data?.error || "Lỗi khi thêm vào compare"
+        );
+
+        // Refetch list khi fail để giữ UI không trắng
+        try {
+          const getRes = await axios.get(
+            `http://localhost:8000/api/products/get-compare-user/${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const fullData = getRes.data;
+          setGetProduct(fullData);
+          localStorage.setItem("userLogin_compare", JSON.stringify(fullData));
+          setCheckCompare(fullData.length >= 2);
+        } catch (refetchError) {
+          console.error("Refetch error:", refetchError);
+          setGetProduct([]);
+          setCheckCompare(false);
+        }
+      }
+    };
+
+    addToCompare();
   }, [productId, userId, token]);
+
+  // useEffect(() => {
+  //   if (!userData && !token) return;
+
+  //   axios
+  //     .get(`http://localhost:8000/api/products/get-compare-user/${userId}`)
+  //     .then((res) => {
+  //       setGetProduct(res.data);
+  //       localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
+  //     })
+  //     .catch((e) => {
+  //       setGetProduct([]);
+  //       console.log("Error", e);
+  //     });
+  // }, []);
 
   useEffect(() => {
     const addCompareGuest = async () => {
@@ -167,6 +250,7 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
     const userLogin_compare = JSON.parse(
       localStorage.getItem("userLogin_compare")
     );
+
     if (userLogin_compare) {
       setGetProduct(userLogin_compare);
     }

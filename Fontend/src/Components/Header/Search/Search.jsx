@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { FaHistory } from "react-icons/fa";
 import { IoCloseSharp } from "react-icons/io5";
-
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
 const popularKeywords = ["pizza", "burger", "gà rán", "combo"];
@@ -21,9 +19,11 @@ export default function SearchComponent({
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [selectedCate, setSelectedCate] = useState(null);
 
   function onChangeCate(e) {
     const value = e.target.textContent;
+
     setSelectCate(value);
     navigate("/productByCate", { state: { selectedCate: value } });
   }
@@ -142,10 +142,21 @@ export default function SearchComponent({
                 <button
                   key={i}
                   onClick={(event) => {
+                    const clickedText = event.currentTarget.textContent.trim();
+
+                    if (clickedText !== e) {
+                      console.log(e, clickedText);
+                      navigate("/notFile");
+                      return;
+                    }
+
+                    setSelectedCate(i); // lưu index đang chọn
                     onChangeCate(event);
                     setShowDropdown(false);
                   }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                  className={`w-full text-left px-4 py-3 transition-colors
+                  ${selectedCate === i ? "bg-gray-200" : "hover:bg-gray-50"}
+                  first:rounded-t-lg last:rounded-b-lg`}
                 >
                   {e}
                 </button>

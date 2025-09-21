@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\History_search;
 use App\Models\ProductCompare;
 use App\Models\UserCompare;
+use App\Models\UserHeart;
 use Illuminate\Http\Request;
-use PhpParser\Node\Stmt\Else_;
+use App\Http\Controllers\FeatureGetDataController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class FeatureDeleteController extends Controller
 {
@@ -29,7 +32,8 @@ class FeatureDeleteController extends Controller
         $compareId = $request->input("productId") ?? null;
         $userId =  $request->input("userId") ?? null;
 
-        if (isset($compareId) && isset($userId)) {
+
+        if ($compareId !== null && $userId !== null) {
             ProductCompare::where("user_id", $userId)->where("product_id", $compareId)->delete();
 
             $getCompare = ProductCompare::select("product_compares.*", "products.*")
@@ -40,6 +44,8 @@ class FeatureDeleteController extends Controller
             if ($getCompare->count() > 0) {
                 return response()->json($getCompare);
             }
+        } else {
+            return response()->json(["error" => "lỗi data gửi đến"], 400);
         }
 
         return response()->json([], 500);
@@ -50,6 +56,46 @@ class FeatureDeleteController extends Controller
             ProductCompare::where("user_id", $userId)->delete();
             return response()->json([], 200);
         }
+        return response()->json([], 500);
+    }
+
+    public function heartDelete(Request $request)
+    {
+        $productId = $request->input("productId");
+        $userId = Auth::id();
+
+        if (!$productId || !$userId) {
+            return response()->json([
+                "message_delete" => "Lỗi server vui lòng tải lại trang"
+            ], 422);
+        }
+
+
+        $checkExists = UserHeart::where("user_id", $userId)
+            ->where("product_id", $productId)->exists();
+
+        if (!$checkExists) {
+            return response()->json([
+                "message_delete" => "Sản phẩm này không tồn tại"
+            ], 409);
+        }
+
+        $check =  UserHeart::where("user_id", $userId)
+            ->where("product_id", $productId)->delete();
+
+        if (!$check) {
+            return response()->json([
+                "message_delete" => "xóa không thành công"
+            ], 410);
+        }
+
+        $function = new FeatureGetDataController();
+        $result = $function->getListHeart($userId);
+
+        if ($result) {
+            return response()->json($result);
+        }
+
         return response()->json([], 500);
     }
 }

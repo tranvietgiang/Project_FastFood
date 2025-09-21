@@ -11,10 +11,15 @@ import HandleIconEffect from "../Handle/HandleIconEffect";
 import { ModelProduct } from "../../PageOther/ModelProduct";
 import HandleCompare from "../Handle/HandleCompare";
 import { HandleHeart } from "../Handle/HandleHeart";
+import HandleMessage from "../Handle/HandleMessage";
+
 export default function GetProducts({ products }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [messageHeart, setMessageHeart] = useState("");
+  const [openMessageHeart, setOpenMessageHeart] = useState(false);
+  const [severity, setSeverity] = useState("error");
 
   return (
     <>
@@ -36,7 +41,18 @@ export default function GetProducts({ products }) {
              group-hover:translate-x-0 group-hover:opacity-100 
              transition-all duration-300 ease-out z-10 overflow-visible"
             >
-              <span onClick={() => HandleHeart(product?.product_id ?? null)}>
+              <span
+                onClick={async () => {
+                  const awaitMessage = await HandleHeart(
+                    product?.product_id ?? null
+                  );
+                  if (awaitMessage) {
+                    setMessageHeart(awaitMessage.message);
+                    setSeverity(awaitMessage.success ? "success" : "error");
+                    setOpenMessageHeart(true);
+                  }
+                }}
+              >
                 <HandleIconEffect
                   icon={FiHeart}
                   tooltip="Yêu thích"
@@ -184,6 +200,13 @@ export default function GetProducts({ products }) {
           productId={selectedId}
         />
       </div>
+
+      <HandleMessage
+        message={messageHeart}
+        open={openMessageHeart}
+        severity={severity}
+        onClose={() => setOpenMessageHeart(false)}
+      />
     </>
   );
 }
