@@ -1,8 +1,7 @@
-import { Link } from "react-router-dom";
-import { CiStar } from "react-icons/ci";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import GetProducts from "../Features/GetProducts/GetProducts";
+import HandleMessage from "../Features/Handle/HandleMessage";
 
 export default function Section_4() {
   const [getProduct, setProduct] = useState([]);
@@ -23,6 +22,8 @@ export default function Section_4() {
         console.log("Error", e);
       });
   }, []);
+
+  useEffect(() => {});
 
   return (
     <>
@@ -46,6 +47,8 @@ export default function Section_4() {
             />
           </div>
         </div>
+
+        <HandleMessage />
       </section>
     </>
   );

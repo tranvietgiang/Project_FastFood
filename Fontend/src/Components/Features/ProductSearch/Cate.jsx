@@ -46,8 +46,6 @@ export default function CateSearch() {
         setError("");
         setCate([]);
         console.log("error", e);
-        setError("Không thể tải dữ liệu.");
-        navigate("/notFile");
         setLoading(false);
       });
   }, [nameCate, setLoading, navigate]);

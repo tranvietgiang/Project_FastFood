@@ -13,6 +13,7 @@ import HandleIconEffect from "../Features/Handle/HandleIconEffect";
 import { ModelProduct } from "../PageOther/ModelProduct";
 import HandleCompare from "../Features/Handle/HandleCompare";
 import { HandleHeart } from "../Features/Handle/HandleHeart";
+import HandleMessage from "../Features/Handle/HandleMessage";
 
 export default function Section_2() {
   const [getProduct, setGetProduct] = useState([]);
@@ -22,6 +23,9 @@ export default function Section_2() {
   const [modelOpen, setModelOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [messageHeart, setMessageHeart] = useState("");
+  const [openMessageHeart, setOpenMessageHeart] = useState(false);
+  const [severity, setSeverity] = useState("error");
 
   const handlePrev = () => {
     setStartIndex((prev) => Math.max(prev - itemsPerPage, 0));
@@ -90,7 +94,16 @@ export default function Section_2() {
                         group-hover:translate-x-0 group-hover:opacity-100 
                         transition-all duration-300 ease-out z-10 overflow-visible"
                       >
-                        <span onClick={() => HandleHeart(e.product_id ?? null)}>
+                        <span
+                          onClick={async () => {
+                            const res = await HandleHeart(e.product_id ?? null);
+                            if (res) {
+                              setSeverity(res.success ? "success" : "error");
+                              setMessageHeart(res.message);
+                              setOpenMessageHeart(true);
+                            }
+                          }}
+                        >
                           <HandleIconEffect
                             icon={FiHeart}
                             tooltip="Yêu thích"
@@ -237,6 +250,15 @@ export default function Section_2() {
             className="w-full h-full object-cover mb-[100px]"
             src="/Images/index/index_slider_2.webp"
             alt=""
+          />
+        </div>
+
+        <div>
+          <HandleMessage
+            message={messageHeart}
+            open={openMessageHeart}
+            severity={severity}
+            onClose={() => setOpenMessageHeart(false)}
           />
         </div>
       </section>
