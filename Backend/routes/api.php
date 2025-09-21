@@ -68,7 +68,7 @@ Route::post("/products/compare-list-guest", [FeatureGetDataController::class, "G
 Route::delete("/products/delete-compare/by-id", [FeatureDeleteController::class, "deleteCompareId"]);
 
 /*get compare */
-Route::get("/products/get-compare-user", [FeatureGetDataController::class, "getCompare"]);
+Route::get("/products/get-compare-user/{userId}", [FeatureGetDataController::class, "getCompare"]);
 
 /*Delete compare-all */
 Route::delete("/products/delete-compare-all/by-id/{userId}", [FeatureDeleteController::class, "deleteCompareAll"]);
@@ -92,6 +92,7 @@ Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
 Route::post('/insert-heart-user', [FeatureAddController::class, 'insertHeartUser']);
 /* user get add heart*/
 Route::get('/get-list-heart/{userId}', [FeatureGetDataController::class, 'getListHeart']);
+Route::middleware('auth:sanctum')->post('/delete/heart', [FeatureDeleteController::class, 'heartDelete']);
 
 /* user get province*/
 Route::get('/get-province', [AddressController::class, 'getProvince']);
