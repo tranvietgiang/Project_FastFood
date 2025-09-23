@@ -20,6 +20,7 @@ import VNPayResult from "./Components/PageOther/ResultPayment/VNPayResult";
 import MomoResult from "./Components/PageOther/ResultPayment/MomoResult";
 import Above from "./Components/Footer/AboveFooter";
 import HeartPage from "./Components/PageOther/HeartPage";
+import CouponPage from "./Components/PageOther/CouponPage";
 function App() {
   return (
     <Router>
@@ -141,6 +142,16 @@ function App() {
               <>
                 <Header />
                 <HeartPage />
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="/user-coupon"
+            element={
+              <>
+                <Header />
+                <CouponPage />
                 <Footer />
               </>
             }

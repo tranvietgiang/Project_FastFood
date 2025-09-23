@@ -2,20 +2,23 @@ import { useState, useEffect } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import axios from "axios";
 import { Link } from "react-router-dom";
-
+import HandleMessage from "./HandleMessage";
 export default function HandleCompare({ isOpen, setOpen, productId }) {
   const [getProduct, setGetProduct] = useState([]);
   const [errorCompare, setErrorCompare] = useState("");
   const [checkCompare, setCheckCompare] = useState(false);
   const token = localStorage.getItem("token");
   const userData = JSON.parse(localStorage.getItem("user")) ?? null;
+  const [openMessageHeart, setOpenMessageHeart] = useState(false);
+  const [severity, setSeverity] = useState("error");
+
   let userId = null;
   if (userData) {
     userId = userData.id ?? null;
   }
 
   const handleCheckCompare = (e) => {
-    if (e <= 2) {
+    if (e < 2) {
       setCheckCompare(false);
     } else {
       setCheckCompare(true);
@@ -25,49 +28,6 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
   useEffect(() => {
     handleCheckCompare();
   }, []);
-
-  // user exists
-  // useEffect(() => {
-  //   if (!productId) return;
-  //   setErrorCompare("");
-
-  //   if (userId && token) {
-  //     axios
-  //       .post(
-  //         `http://localhost:8000/api/products/add-compare/by-id`,
-  //         {
-  //           productId,
-  //           userId,
-  //         },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "Content-type": "application/json",
-  //           },
-  //         }
-  //       )
-  //       .then((res) => {
-  //         if (!!userId && !!token) {
-  //           setGetProduct(res.data);
-  //           localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
-  //           console.log(res.data.length);
-  //           if (res.data.length < 2) {
-  //             setCheckCompare(false);
-  //           } else {
-  //             setCheckCompare(true);
-  //           }
-  //         } else {
-  //           // setGetProduct([]);
-  //         }
-  //       })
-  //       .catch((Error) => {
-  //         if (Error.response.data.error != "") {
-  //           setErrorCompare(Error.response.data.error);
-  //         }
-  //         console.log("error", Error);
-  //       });
-  //   }
-  // }, [productId, userId, token]);
 
   useEffect(() => {
     if (!productId || !userId || !token) return;
@@ -102,6 +62,8 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
 
         setCheckCompare(fullData.length >= 2);
       } catch (error) {
+        setOpenMessageHeart(true);
+        setSeverity("error");
         setErrorCompare(
           error.response?.data?.error || "Lỗi khi thêm vào compare"
         );
@@ -131,21 +93,6 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
 
     addToCompare();
   }, [productId, userId, token]);
-
-  // useEffect(() => {
-  //   if (!userData && !token) return;
-
-  //   axios
-  //     .get(`http://localhost:8000/api/products/get-compare-user/${userId}`)
-  //     .then((res) => {
-  //       setGetProduct(res.data);
-  //       localStorage.setItem("userLogin_compare", JSON.stringify(res.data));
-  //     })
-  //     .catch((e) => {
-  //       setGetProduct([]);
-  //       console.log("Error", e);
-  //     });
-  // }, []);
 
   useEffect(() => {
     const addCompareGuest = async () => {
@@ -177,6 +124,8 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
               ? true
               : false;
           if (checkCate_id) {
+            setOpenMessageHeart(true);
+            setSeverity("error");
             setErrorCompare("Chỉ được so sánh sản phẩm cùng danh mục!");
             return;
           }
@@ -280,11 +229,11 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
           isOpen ? "block" : "hidden"
         }`}
       >
-        {errorCompare != "" && (
+        {/* {errorCompare != "" && (
           <div className="bg-white absolute top-0 right-[100px] text-red-600 font-bold">
             {errorCompare}
           </div>
-        )}
+        )} */}
         <div
           className="bg-white rounded-t-lg shadow-lg w-full md:w-[1200px] p-4"
           onClick={(e) => e.stopPropagation()}
@@ -336,6 +285,12 @@ export default function HandleCompare({ isOpen, setOpen, productId }) {
             </button>
           </div>
         </div>
+        <HandleMessage
+          message={errorCompare}
+          open={openMessageHeart}
+          onClose={() => setOpenMessageHeart(false)}
+          severity={severity}
+        />
       </div>
     </>
   );

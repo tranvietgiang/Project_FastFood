@@ -29,10 +29,13 @@ export default function CompareIngredients() {
         }
       })
       .catch((e) => {
+        if (e.response.status === 410) {
+          navigate(-1);
+        }
         setProducts([]);
         console.log("e", e);
       });
-  }, [user_id]);
+  }, [user_id, navigate]);
 
   useEffect(() => {
     if (user_id) return; // chỉ chạy khi KHÔNG login (guest)

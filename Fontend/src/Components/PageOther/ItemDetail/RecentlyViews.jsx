@@ -1,13 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import GetProducts from "../../Features/GetProducts/GetProducts";
 
 export default function RecentlyViews({ idViewRecently }) {
   const [getProduct, setGetProducts] = useState([]);
-  const listRef = useRef(null);
-  const scroll = (distance) => {
-    listRef.current?.scrollBy({ left: distance, behavior: "smooth" });
-  };
+
   useEffect(() => {
     if (!idViewRecently) {
       return;
@@ -28,34 +25,21 @@ export default function RecentlyViews({ idViewRecently }) {
 
   return (
     <>
-      <div className="relative text-center">
-        <h1 className="font-semibold text-2xl mt-10  mb-3 md:text-[40px] text-center md:mt-[120px] md:mb-[80px]">
+      <div>
+        <h1 className="font-semibold text-2xl mt-10 mb-3 md:text-[40px] text-center md:mt-[120px] md:mb-[80px]">
           Sản phẩm đã xem
         </h1>
-        <button
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-200 p-2 rounded-full md:hidden"
-          onClick={() => scroll(-200)}
-        >
-          ◀
-        </button>
-
-        <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-200 p-2 rounded-full md:hidden"
-          onClick={() => scroll(200)}
-        >
-          ▶
-        </button>
-
-        <ul
-          ref={listRef}
-          style={{
-            scrollbarWidth: "none", // Firefox
-            msOverflowStyle: "none", // IE 10+
-          }}
-          className="flex place-content-center place-items-center gap-2 overflow-x-auto scroll-smooth mt-[20px] md:mt-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-x-visible cursor-grab"
-        >
-          <GetProducts products={getProduct} />
-        </ul>
+        {/* Grid đặc biệt */}
+        <div className="flex overflow-x-auto gap-4 pb-4">
+          <div className="w-full px-4">
+            <ul className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 gap-y-[20px]">
+              <GetProducts
+                products={getProduct}
+                className="2xl:min-w-[250px] 2xl:flex-shrink-0 2xl:mx-2 2xl:sm:mx-4"
+              />
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );

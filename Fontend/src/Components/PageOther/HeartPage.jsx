@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
-import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HandleMessage from "../Features/Handle/HandleMessage";
+
 export default function HeartPage() {
   const [getProduct, setProduct] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -12,12 +12,22 @@ export default function HeartPage() {
   const [messageHeart, setMessageHeart] = useState("");
   const [openMessageHeart, setOpenMessageHeart] = useState(false);
   const [severity, setSeverity] = useState("error");
-  const users = JSON.parse(localStorage.getItem("user")) ?? null;
+  const users = localStorage.getItem("user") ?? null;
   const token = localStorage.getItem("token");
   const user_id = users?.id;
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token || !user_id) return;
+    if (!token || !user_id) {
+      navigate("/auth/login");
+      return;
+    }
+
+    const cache_heart = localStorage.getItem("list_heart");
+    if (cache_heart) {
+      setProduct(cache_heart);
+    }
+
     setLoading(true);
     const FetchGetHeartList = async () => {
       try {
@@ -25,13 +35,14 @@ export default function HeartPage() {
           `http://localhost:8000/api/get-list-heart/${user_id}`
         );
         setLoading(false);
-        setProduct(res.data.data ?? res.data); // nếu paginate thì lấy data.data
+        setProduct(res.data.data ?? []);
+        localStorage.setItem("list_heart", JSON.stringify(res.data.data));
       } catch {
         setProduct([]);
       }
     };
     FetchGetHeartList();
-  }, [token, user_id]);
+  }, [token, user_id, navigate]);
 
   const handleDelete = async (productId) => {
     if (!token || !user_id || !productId) return;
@@ -59,12 +70,7 @@ export default function HeartPage() {
       setOpenMessageHeart(true);
       setSeverity("error");
       setLoading(false);
-      console.log(error);
-      if (error.response.status == 409) {
-        setMessageHeart(error.response.data.message_delete);
-      } else if (error.response.status == 410) {
-        setMessageHeart(error.response.data.message_delete);
-      } else if (error.response.status == 422) {
+      if ([409, 410, 422].includes(error?.response?.status)) {
         setMessageHeart(error.response.data.message_delete);
       }
     }
@@ -111,6 +117,16 @@ export default function HeartPage() {
                       -{product.percent_name}%
                     </span>
                   )}
+                  <div
+                    className="absolute top-0 right-0 rounded-full text-red-500 hover:text-red-700 cursor-pointer"
+                    role="button"
+                    onClickCapture={(e) => {
+                      e.preventDefault(); // chặn hành vi mặc định
+                      handleDelete(product?.product_id ?? null);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </div>
                 </div>
 
                 {/* Title */}
@@ -146,18 +162,6 @@ export default function HeartPage() {
                   )}
                 </div>
               </Link>
-              <div className="mt-[10px]">
-                <Button
-                  onClick={async () => {
-                    handleDelete(product?.product_id ?? null);
-                  }}
-                  variant="contained"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                >
-                  Xóa
-                </Button>
-              </div>
             </li>
           ))
         ) : (

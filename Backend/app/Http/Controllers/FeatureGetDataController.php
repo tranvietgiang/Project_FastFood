@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CouponUser;
 use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\UserCompare;
 use App\Models\UserHeart;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Termwind\Components\Raw;
 
 class FeatureGetDataController extends Controller
 {
@@ -30,6 +33,11 @@ class FeatureGetDataController extends Controller
 
     public function compareIngredients($userId)
     {
+        $check = ProductCompare::where("user_id", $userId)->count();
+        if ($check < 2) {
+            return response()->json([], 410);
+        }
+
         $getCompareIngredients =
             ProductCompare::select("product_compares.*", "products.*", "percents.percent_name")
             ->Join("products", "product_compares.product_id", "=", "products.product_id")
@@ -101,5 +109,40 @@ class FeatureGetDataController extends Controller
             return response()->json([]);
         }
         return response()->json([], 500);
+    }
+
+    public function getListCoupon($userId)
+    {
+        if (!$userId) {
+            return response()->json([
+                "auth" => "user-login -yet"
+            ], 421);
+        }
+
+        $getCouponProducts = CouponUser::where("coupon_users.user_id", $userId)
+            ->orderBy("coupon_users.updated_at", "desc")
+            ->paginate(8);
+
+        if ($getCouponProducts->count() > 0) {
+            return response()->json($getCouponProducts);
+        } else {
+            return response()->json([]);
+        }
+        return response()->json([], 500);
+    }
+
+
+    public function countCoupon()
+    {
+        $getListCoupon = CouponUser::where("user_id", Auth::id())
+            ->orderBy("created_at", "desc")->count();
+
+        if ($getListCoupon > 0) {
+            return response()->json([
+                "count" => $getListCoupon
+            ]);
+        }
+
+        return response()->json([], 400);
     }
 }

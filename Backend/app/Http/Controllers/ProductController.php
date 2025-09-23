@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\RecentlyViewProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
@@ -371,19 +372,6 @@ class ProductController extends Controller
         $getCode = Coupon::where("coupon_id", $code)->first();
         if ($getCode) {
             return response()->json($getCode);
-        }
-        return response()->json([], 400);
-    }
-
-    public function getCouponUser()
-    {
-        $getListCoupon = CouponUser::orderBy("created_at", "desc")->get();
-        // dd($getListCoupon);
-        if ($getListCoupon->count() > 0) {
-            return response()->json([
-                "list" =>    $getListCoupon,
-                "count" => $getListCoupon->count()
-            ]);
         }
         return response()->json([], 400);
     }

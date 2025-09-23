@@ -85,14 +85,21 @@ Route::get("/enter-the-coupon/{code}", [ProductController::class, "enterTheCoupo
 /* insert code coupon*/
 Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAddController::class, 'insertCouponUser']);
 
-/* get code coupon*/
-Route::get('/get-coupon-user', [ProductController::class, 'getCouponUser']);
+/* get count coupon*/
+Route::middleware("auth:sanctum")->get('/get-count-user', [FeatureGetDataController::class, 'countCoupon']);
 
 /* user add heart*/
 Route::post('/insert-heart-user', [FeatureAddController::class, 'insertHeartUser']);
 /* user get add heart*/
 Route::get('/get-list-heart/{userId}', [FeatureGetDataController::class, 'getListHeart']);
+/* user delete heart*/
 Route::middleware('auth:sanctum')->post('/delete/heart', [FeatureDeleteController::class, 'heartDelete']);
+
+/* user get coupon*/
+Route::get('/get-list-coupon/{userId}', [FeatureGetDataController::class, 'getListCoupon']);
+/* user delete coupon*/
+Route::middleware('auth:sanctum')
+    ->post('/delete/coupon', [FeatureDeleteController::class, 'couponDelete']);
 
 /* user get province*/
 Route::get('/get-province', [AddressController::class, 'getProvince']);
