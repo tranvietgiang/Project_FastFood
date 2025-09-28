@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CouponUser;
+use App\Models\OrderCart;
 use App\Models\Product;
 use App\Models\ProductCompare;
+use App\Models\User;
 use App\Models\UserCompare;
 use App\Models\UserHeart;
 use Illuminate\Http\Request;
@@ -101,9 +103,9 @@ class FeatureGetDataController extends Controller
             ->leftJoin("percents", "products.product_id", "=", "percents.product_id")
             ->where("user_hearts.user_id", $userId)
             ->orderBy("user_hearts.updated_at", "desc")
-            ->paginate(8); // ✅ đúng cú pháp
+            ->paginate(8);
 
-        if ($getHeartProducts->count() > 0) {
+        if ($getHeartProducts) {
             return response()->json($getHeartProducts);
         } else {
             return response()->json([]);
@@ -144,5 +146,30 @@ class FeatureGetDataController extends Controller
         }
 
         return response()->json([], 400);
+    }
+
+    public function getUser()
+    {
+        // Lấy tất cả user trừ user hiện tại
+        $users = User::where('id', '!=', Auth::id())->get();
+        return response()->json($users);
+    }
+
+
+    public function Carts()
+    {
+        $getData = OrderCart::select("products.*", "order_carts.*")
+            ->join("products", "order_carts.product_id", "=", "products.product_id")
+            ->where('order_carts.user_id', Auth::id())->get();
+
+        if ($getData->count() > 0) {
+            return response()->json(
+                [
+                    "get_data" => $getData,
+                    "count_cart" => $getData->count()
+                ]
+            );
+        }
+        return response()->json([], 500);
     }
 }

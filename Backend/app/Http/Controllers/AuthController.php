@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
-    //
+
     public function login(Request $req)
     {
         $check = $req->all();

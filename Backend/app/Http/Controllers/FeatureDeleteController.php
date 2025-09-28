@@ -9,6 +9,7 @@ use App\Models\UserHeart;
 use Illuminate\Http\Request;
 use App\Http\Controllers\FeatureGetDataController;
 use App\Models\CouponUser;
+use App\Models\OrderCart;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -132,6 +133,48 @@ class FeatureDeleteController extends Controller
 
         $function = new FeatureGetDataController();
         $result = $function->getListHeart($userId);
+
+        if ($result) {
+            return response()->json($result);
+        }
+
+        return response()->json([], 500);
+    }
+
+    public function cartItemDelete(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $cart_id = $request->input('cart_id');
+        $userId = Auth::id();
+
+        if (!$productId || !$userId) {
+            return response()->json([
+                "message_delete" => "Lỗi server vui lòng tải lại trang"
+            ], 422);
+        }
+
+
+        $checkExists = OrderCart::where("user_id", $userId)
+            ->where("product_id", $productId)->exists();
+
+        if (!$checkExists) {
+            return response()->json([
+                "message_delete" => "Sản phẩm này không tồn tại trong giỏ hàng"
+            ], 409);
+        }
+
+        $check =  OrderCart::where("user_id", $userId)
+            ->where("product_id", $productId)
+            ->delete();
+
+        if (!$check) {
+            return response()->json([
+                "message_delete" => "Xóa không thành công"
+            ], 410);
+        }
+
+        $function = new FeatureGetDataController();
+        $result = $function->Carts();
 
         if ($result) {
             return response()->json($result);

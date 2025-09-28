@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\CouponsController;
+use App\Http\Controllers\FeatureUpdateController;
 use App\Http\Controllers\FeatureAddController;
 use App\Http\Controllers\FeatureDeleteController;
 use App\Http\Controllers\FeatureGetDataController;
 use App\Http\Controllers\FeatureSearchController;
 use App\Http\Controllers\PaymentBuynowController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\MessageController;
 
 /**Auth */
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -110,6 +112,17 @@ Route::get('/get-ward/{districtId}', [AddressController::class, 'getWard']);
 /* user inert-address*/
 Route::post('/inert-address-user', [AddressController::class, 'inertAddress']);
 
+/* user add-item-cart*/
+Route::middleware("auth:sanctum")->post('/insert-cart-item', [FeatureAddController::class, 'insertCartItem']);
+
+/* user get-cart*/
+Route::middleware("auth:sanctum")->get('/get-cart', [FeatureGetDataController::class, 'Carts']);
+/* user update-cart*/
+Route::middleware("auth:sanctum")->post('/update-cart', [FeatureUpdateController::class, 'updateCarts']);
+
+/* user update-cart*/
+Route::middleware("auth:sanctum")->post('/delete-cart', [FeatureDeleteController::class, 'cartItemDelete']);
+
 /* user inert-address*/
 Route::get('/get-address', [AddressController::class, 'getAddress']);
 /* user inert-address*/
@@ -125,3 +138,9 @@ Route::post('/vnpay/check-vnpay', [PaymentBuyNowController::class, 'checkVNpay']
 Route::post('/momo/check-momo', [PaymentBuyNowController::class, 'checkMomo']);
 /* user click send mail y*/
 Route::middleware('auth:sanctum')->post('/send-bill', [PaymentBuyNowController::class, 'sendBill']);
+
+// message
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/messages', [MessageController::class, 'index']);
+    Route::post('/messages', [MessageController::class, 'store']);
+});
