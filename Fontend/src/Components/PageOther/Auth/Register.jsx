@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import validator from "validator";
+import ClipLoader from "react-spinners/ClipLoader";
 import axios from "axios";
 
 export default function Register() {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullname: "",
     phone: "",
@@ -27,30 +29,35 @@ export default function Register() {
     e.preventDefault();
     setErrorsPhone("");
     setErrorsEmail("");
+    setLoading(true);
 
     if (Object.values(formData).some((v) => v.trim() === "")) {
       setErrorField("Vui lòng điền đầy đủ thông tin của bạn!");
+      setLoading(false);
       return;
     }
 
     if (hasSpecialChar(formData.fullname)) {
+      setLoading(false);
       setErrorField("Tên không được chứa ký tự đặc biệt, vd: giang");
-
       return;
     }
 
     if (!validatePhoneNumber(formData.phone)) {
+      setLoading(false);
       setErrorField("Vui lòng nhập đúng số điện thoại! vd:0336844862");
       return;
     }
 
     if (!isValidEmail(formData.email)) {
+      setLoading(false);
       setErrorField(
         "Vui lòng nhập email đúng yêu cầu! vd:tranvetgiang@gmail.com"
       );
     }
 
     if (!isValidPassword(formData.password)) {
+      setLoading(false);
       setErrorField(
         "Password không đúng yêu cầu:\n- Ít nhất 1 số\n- Ít nhất 1 chữ hoa\n- Ít nhất 1 chữ thường\n- Ít nhất 1 ký tự đặc biệt\n- Độ dài 8-72 ký tự"
       );
@@ -68,9 +75,11 @@ export default function Register() {
 
       setFormData({ fullname: "", phone: "", email: "", password: "" });
       if (res.data.check_otp) {
+        setLoading(false);
         navigate("/auth/otp", { state: { email: res.data.email } });
       }
     } catch (error) {
+      setLoading(false);
       if (error.response && error.response.status === 424) {
         setErrorsEmail(error.response.data.email);
       }
@@ -119,7 +128,11 @@ export default function Register() {
               {errorField}
             </p>
           )}
-
+          {loading && (
+            <div className="flex justify-center items-center fixed inset-0 bg-black opacity-50">
+              <ClipLoader size={30} color="#36d7b7" loading={loading} />
+            </div>
+          )}
           <form onSubmit={handleSubmit} method="post">
             <div className="mb-4">
               <label

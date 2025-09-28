@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.2",
+    "@mui/material": "^7.3.2",
     "@react-email/components": "^0.5.2",
     "@react-email/render": "^1.2.2",
     "@tailwindcss/cli": "^4.1.11",

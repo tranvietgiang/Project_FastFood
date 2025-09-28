@@ -1,13 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setFlashMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/user");
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     const message = location.state?.message ?? "";
@@ -24,9 +35,9 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
 
+    setLoading(true);
     if (email === "" || password === "") {
       setError("Vui lòng nhập đầy đủ");
       return;
@@ -47,11 +58,13 @@ export default function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      setLoading(false);
       navigate("/fast.foods");
     } catch (error) {
       console.log("Error", error);
       if (error.response.status === 400) {
         setError(error.response.data.message);
+        setLoading(false);
       }
     }
   };
@@ -101,6 +114,12 @@ export default function Login() {
           <p className="whitespace-pre-line text-red-500 bg-red-500/20 rounded-md p-5 text-center mb-3 lg:max-w-[385px] ">
             {error}
           </p>
+        )}
+
+        {loading && (
+          <div className="flex justify-center items-center fixed inset-0 bg-black opacity-50">
+            <ClipLoader size={30} color="#36d7b7" loading={loading} />
+          </div>
         )}
 
         <form onSubmit={handleSubmit} method="post">

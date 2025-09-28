@@ -17,7 +17,6 @@ function Header() {
   const [historySearch, setHistorySearch] = useState([]);
   const [fixed, setFixed] = useState(false);
   const isValidToken = localStorage.getItem("token");
-
   const [token, setToken] = useState(false);
 
   useEffect(() => {

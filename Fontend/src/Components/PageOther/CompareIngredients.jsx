@@ -29,10 +29,13 @@ export default function CompareIngredients() {
         }
       })
       .catch((e) => {
+        if (e.response.status === 410) {
+          navigate(-1);
+        }
         setProducts([]);
         console.log("e", e);
       });
-  }, [user_id]);
+  }, [user_id, navigate]);
 
   useEffect(() => {
     if (user_id) return; // chỉ chạy khi KHÔNG login (guest)
@@ -70,19 +73,16 @@ export default function CompareIngredients() {
     if (!productId && !userId) return;
 
     axios
-      .delete(
-        `http://localhost:8000/api/products/delete-compare/by-id`,
-        {
+      .delete(`http://localhost:8000/api/products/delete-compare/by-id`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+        data: {
           productId,
           userId,
         },
-        {
-          Headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-type": "application/json",
-          },
-        }
-      )
+      })
       .then((res) => {
         setProducts(res.data);
       })
@@ -95,7 +95,8 @@ export default function CompareIngredients() {
     <>
       <section className="max-w-[1400px] mx-auto mt-6">
         <div className="font-semibold mb-2">
-          <Link onClick={() => navigate(-1)}> Quay lại</Link> / So sánh sản phẩm
+          <Link onClick={() => navigate(-1)}> Quay lại</Link> /
+          <span className="mx-[10px] opacity-50">So sánh sản phẩm</span>
         </div>
         <div className="bg-white p-5 grid grid-cols-2 md:grid-cols-3 gap-4 text-center rounded-md">
           {getProducts.map((e, index) => (
