@@ -5,27 +5,28 @@ import { useNavigate, Link } from "react-router-dom";
 export default function User() {
   const navigate = useNavigate();
   const [data, setData] = useState({});
-  const [getCoupon, setCoupon] = useState([]);
   const [getCouponCount, setCouponCount] = useState(null);
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
-
-    if (!token) {
+    if (!token || !user) {
       navigate("/auth/login");
       return;
     }
 
     axios
-      .get("http://localhost:8000/api/get-coupon-user")
-      .then((res) => {
-        setCoupon(res.data);
-        setCouponCount(res.data.count);
+      .get("http://localhost:8000/api/get-count-user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       })
-      .catch((e) => {
-        console.log(e);
-        setCoupon([]);
+      .then((res) => {
+        setCouponCount(res.data.count);
+        console.log(res);
+      })
+      .catch(() => {
         setCouponCount(0);
       });
 
@@ -37,6 +38,7 @@ export default function User() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem(`count_cart_${token}`);
     navigate("/auth/login");
   };
 
@@ -63,7 +65,7 @@ export default function User() {
             Sổ địa chỉ (0)
           </li>
           <li className="cursor-pointer hover:text-orange-500">
-            Mã giảm giá ({getCouponCount ?? 0})
+            <Link to="/user-coupon">Mã giảm giá ({getCouponCount ?? 0})</Link>
           </li>
           <li
             onClick={handleLogout}

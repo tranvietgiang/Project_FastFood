@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 export default function ProductRelated({ idDetailRelated }) {
   const [getProducts, setGetProducts] = useState([]);
 
-  // console.log(getProducts);
-
   useEffect(() => {
     if (!idDetailRelated) {
       return;
@@ -27,12 +25,20 @@ export default function ProductRelated({ idDetailRelated }) {
   return (
     <>
       <div>
-        <h2 className="text-[35px] font-bold text-center mt-[100px] mb-[100px]">
-          Sản phẩm liên quan
-        </h2>
-        <ul className="grid grid-cols-2 md:grid-cols-4 gap-y-3 sm:grid-cols-2 rounded-lg  place-items-center">
-          <GetProducts products={getProducts} />
-        </ul>
+        <h1 className="font-semibold text-2xl mt-10 mb-3 md:text-[40px] text-center md:mt-[120px] md:mb-[80px]">
+          Sản phẩm đã xem
+        </h1>
+        {/* Grid đặc biệt */}
+        <div className="flex overflow-x-auto pb-4 justify-between">
+          <div className="w-full px-4">
+            <ul className="flex min-w-max justify-between space-x-5 sm:space-x-8 sm:grid sm:grid-cols-2 lg:grid lg:grid-cols-4 xl:grid xl:grid-cols-4 2xlg:grid 2xl:grid-cols-4 gap-4 gap-y-[20px]">
+              <GetProducts
+                products={getProducts}
+                className="min-w-[250px] flex-shrink-0 mx-2 sm:mx-4"
+              />
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );

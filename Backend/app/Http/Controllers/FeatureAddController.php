@@ -10,6 +10,7 @@ use App\Models\UserCompare;
 use App\Models\UserHeart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\OrderCart;
 
 class FeatureAddController extends Controller
 {
@@ -134,5 +135,61 @@ class FeatureAddController extends Controller
         }
 
         return response()->json([], 500);
+    }
+
+
+    public function insertCartItem(Request $request)
+    {
+        $productId = $request->input('productId');
+        $priceDiscount = $request->input('priceDiscount');
+
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json(['cartItem_error' => 'Unauthorized'], 402);
+        }
+
+        if (!$productId) {
+            return response()->json(['cartItem_error' => 'Lỗi dữ liệu, vui lòng refresh trang'], 402);
+        }
+
+        $checkItem = Product::where("product_id", $productId)->first();
+        if (!$checkItem) {
+            return response()->json(['cartItem_error' => 'Không tìm thấy sản phẩm'], 402);
+        }
+
+        $checkCart = OrderCart::where("product_id", $productId)
+            ->where("user_id", $userId)
+            ->first();
+
+        if ($checkCart) {
+            return response()->json(['cartItem_error' => 'Sản phẩm đã tồn tại trong giỏ hàng'], 402);
+        }
+
+        if ($priceDiscount) {
+            OrderCart::create([
+                "product_id" => $productId,
+                "user_id" => $userId,
+                "cart_quantity" => 1,
+                "current_price" => $priceDiscount
+            ]);
+        } else {
+            OrderCart::create([
+                "product_id" => $productId,
+                "user_id" => $userId,
+                "cart_quantity" => 1,
+                "current_price" => $checkItem->product_price
+            ]);
+        }
+
+        $count = OrderCart::where("user_id", Auth::id())->count();
+
+        return response()->json(
+            [
+                'message' => 'Đã thêm vào giỏ hàng',
+                "count_cart" => $count
+            ],
+            200
+        );
     }
 }

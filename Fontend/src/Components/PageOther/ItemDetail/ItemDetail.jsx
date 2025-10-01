@@ -89,16 +89,6 @@ export default function ItemDetail() {
       });
   }, [id]);
 
-  // useEffect(() => {
-  //   if (!getProduct?.variants?.length) return;
-
-  //   let variant = getProduct?.variants?.find(
-  //     (e) => e.product_variant_name == selectVariants
-  //   );
-
-  //   setPriceVariantPrice(variant?.product_variant_price ?? null);
-  // }, [selectVariants, getProduct]);
-
   const selectedVariant = useMemo(() => {
     setQuantity(1);
     return getProduct?.variants?.find(
@@ -522,7 +512,9 @@ export default function ItemDetail() {
       </div>
 
       {/*Display product related*/}
-      <ProductRelated idDetailRelated={id} />
+      <div className="">
+        <ProductRelated idDetailRelated={id} />
+      </div>
 
       {/*Display product user viewed*/}
       <RecentlyViews idViewRecently={id} />

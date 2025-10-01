@@ -15,7 +15,6 @@ class CouponUser extends Model
 
 
     protected $fillable = [
-        "coupon_user_id",
         'coupon_user_name',
         "coupon_user_percent",
         "coupon_user_minimum_price",

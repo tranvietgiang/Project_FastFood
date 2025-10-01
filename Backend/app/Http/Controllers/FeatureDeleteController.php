@@ -8,6 +8,8 @@ use App\Models\UserCompare;
 use App\Models\UserHeart;
 use Illuminate\Http\Request;
 use App\Http\Controllers\FeatureGetDataController;
+use App\Models\CouponUser;
+use App\Models\OrderCart;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -59,6 +61,46 @@ class FeatureDeleteController extends Controller
         return response()->json([], 500);
     }
 
+    public function couponDelete(Request $request)
+    {
+        $coupon_id = $request->input("coupon_user_id");
+        $userId = Auth::id();
+
+        if (!$userId || !$coupon_id) {
+            return response()->json([
+                "message_delete" => "Lỗi server vui lòng tải lại trang"
+            ], 422);
+        }
+
+
+        $checkExists = CouponUser::where("user_id", $userId)
+            ->where("coupon_user_id", $coupon_id)->exists();
+
+        if (!$checkExists) {
+            return response()->json([
+                "message_delete" => "Mã giảm giá không tồn tại, refresh trang"
+            ], 409);
+        }
+
+        $check =  CouponUser::where("user_id", $userId)
+            ->where("coupon_user_id", $coupon_id)->delete();
+
+        if (!$check) {
+            return response()->json([
+                "message_delete" => "Xóa không thành công"
+            ], 410);
+        }
+
+        $function = new FeatureGetDataController();
+        $result = $function->getListCoupon($userId);
+
+        if ($result) {
+            return response()->json($result);
+        }
+
+        return response()->json([], 500);
+    }
+
     public function heartDelete(Request $request)
     {
         $productId = $request->input("productId");
@@ -91,6 +133,48 @@ class FeatureDeleteController extends Controller
 
         $function = new FeatureGetDataController();
         $result = $function->getListHeart($userId);
+
+        if ($result) {
+            return response()->json($result);
+        }
+
+        return response()->json([], 500);
+    }
+
+    public function cartItemDelete(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $cart_id = $request->input('cart_id');
+        $userId = Auth::id();
+
+        if (!$productId || !$userId) {
+            return response()->json([
+                "message_delete" => "Lỗi server vui lòng tải lại trang"
+            ], 422);
+        }
+
+
+        $checkExists = OrderCart::where("user_id", $userId)
+            ->where("product_id", $productId)->exists();
+
+        if (!$checkExists) {
+            return response()->json([
+                "message_delete" => "Sản phẩm này không tồn tại trong giỏ hàng"
+            ], 409);
+        }
+
+        $check =  OrderCart::where("user_id", $userId)
+            ->where("product_id", $productId)
+            ->delete();
+
+        if (!$check) {
+            return response()->json([
+                "message_delete" => "Xóa không thành công"
+            ], 410);
+        }
+
+        $function = new FeatureGetDataController();
+        $result = $function->Carts();
 
         if ($result) {
             return response()->json($result);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RiCustomerService2Fill } from "react-icons/ri";
 import {
   CiCircleChevDown,
   CiCircleChevLeft,
@@ -8,13 +9,13 @@ import "./Navbar.css";
 
 export default function Navbar() {
   const menuItems = [
-    { name: "Trang chủ", href: "/fast.foods" },
+    { name: "Trang chủ", href: "/fast-foods" },
     { name: "Menu", hasDropdown: true },
     { name: "Chương trình khuyến mãi", hasDropdown: true },
     { name: "Đặt bàn", href: "#" },
-    { name: "Tin tức", href: "#" },
-    { name: "Giới thiệu", href: "#" },
-    { name: "Liên hệ", href: "#" },
+    { name: "🤍", href: "/user-heart" },
+    { name: "CSKH-📞", href: "/user-cskh" },
+    { name: "Giới thiệu ", href: "#" },
     { name: "Hướng dẫn thiết lập", href: "#" },
   ];
 

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import GetProducts from "../Features/GetProducts/GetProducts";
-import HandleMessage from "../Features/Handle/HandleMessage";
 
 export default function Section_4() {
   const [getProduct, setProduct] = useState([]);
@@ -41,14 +40,12 @@ export default function Section_4() {
 
           <div>
             <img
-              className="object-cover md:w-[300px] md:h-auto  md:block hidden"
+              className="object-cover 2xl:w-[300px] md:h-auto  md:block hidden"
               src="/Images/index/index_slider_6.webp"
               alt=""
             />
           </div>
         </div>
-
-        <HandleMessage />
       </section>
     </>
   );

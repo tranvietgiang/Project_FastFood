@@ -20,13 +20,19 @@ import VNPayResult from "./Components/PageOther/ResultPayment/VNPayResult";
 import MomoResult from "./Components/PageOther/ResultPayment/MomoResult";
 import Above from "./Components/Footer/AboveFooter";
 import HeartPage from "./Components/PageOther/HeartPage";
+import CouponPage from "./Components/PageOther/CouponPage";
+import OrderCart from "./Components/PageOther/OrderCart";
+import Chat from "./Components/PageOther/Chat";
+import StudentChat from "./Components/Features/CustomerCare/UserNeedCare";
+import TeacherChat from "./Components/Features/CustomerCare/CustomerCare";
+
 function App() {
   return (
     <Router>
       <div style={{ background: "#f4f1ea" }}>
         <Routes>
           <Route
-            path="/fast.foods"
+            path="/fast-foods"
             element={
               <>
                 <Header />
@@ -145,11 +151,44 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/user-coupon"
+            element={
+              <>
+                <Header />
+                <CouponPage />
+                <Footer />
+              </>
+            }
+          />
+
+          <Route
+            path="/user-cart"
+            element={
+              <>
+                <Header />
+                <OrderCart />
+                <Footer />
+              </>
+            }
+          />
 
           <Route path="/information-orders" element={<InformationOrders />} />
           <Route path="/result-zaloPay" element={<ZaloPay />} />
           <Route path="/result-vnPay" element={<VNPayResult />} />
           <Route path="/result-momo" element={<MomoResult />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/cskh" element={<TeacherChat />} />
+          <Route
+            path="user-cskh"
+            element={
+              <>
+                <Header />
+                <StudentChat />
+                <Footer />
+              </>
+            }
+          />
         </Routes>
       </div>
     </Router>
