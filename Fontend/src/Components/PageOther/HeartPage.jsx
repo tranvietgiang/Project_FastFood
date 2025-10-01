@@ -12,7 +12,7 @@ export default function HeartPage() {
   const [messageHeart, setMessageHeart] = useState("");
   const [openMessageHeart, setOpenMessageHeart] = useState(false);
   const [severity, setSeverity] = useState("error");
-  const users = localStorage.getItem("user") ?? null;
+  const users = JSON.parse(localStorage.getItem("user")) ?? null;
   const token = localStorage.getItem("token");
   const user_id = users?.id;
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function HeartPage() {
       return;
     }
 
-    const cache_heart = localStorage.getItem("list_heart");
+    const cache_heart = JSON.parse(localStorage.getItem("list_heart"));
     if (cache_heart) {
       setProduct(cache_heart);
     }
@@ -36,18 +36,19 @@ export default function HeartPage() {
         );
         setLoading(false);
         setProduct(res.data.data ?? []);
+        console.log(res);
         localStorage.setItem("list_heart", JSON.stringify(res.data.data));
       } catch {
+        setLoading(false);
         setProduct([]);
       }
     };
     FetchGetHeartList();
-  }, [token, user_id, navigate]);
+  }, []);
 
   const handleDelete = async (productId) => {
     if (!token || !user_id || !productId) return;
     setLoading(true);
-    console.log("1", productId, user_id);
     try {
       const res = await axios.post(
         `http://localhost:8000/api/delete/heart`,
@@ -94,7 +95,7 @@ export default function HeartPage() {
           <div className="flex justify-center items-center fixed inset-0 bg-black opacity-50">
             <ClipLoader size={30} color="#36d7b7" loading={loading} />
           </div>
-        ) : getProduct ? (
+        ) : getProduct.length > 0 ? (
           getProduct.map((product, i) => (
             <li
               key={product.product_id || i}

@@ -19,6 +19,23 @@ function Header() {
   const isValidToken = localStorage.getItem("token");
   const [token, setToken] = useState(false);
 
+  const [countCart, setCountCart] = useState(
+    JSON.parse(localStorage.getItem(`count_cart_${token}`)) || 0
+  );
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      setCountCart(e.detail);
+      localStorage.setItem(`count_cart_${token}`, e.detail);
+    };
+
+    window.addEventListener("updateCart", handleUpdate);
+
+    return () => {
+      window.removeEventListener("updateCart", handleUpdate);
+    };
+  }, []);
+
   useEffect(() => {
     if (isValidToken) {
       setToken(true);
@@ -54,7 +71,7 @@ function Header() {
     >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/fast.foods">
+          <Link to="/fast-foods">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xl">EGA</span>
@@ -84,12 +101,14 @@ function Header() {
                 </Link>
               }
             </button>
-            <button className="relative text-gray-600 hover:text-gray-800 transition-colors">
-              <CiShoppingCart size={24} />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
-            </button>
+            <Link to="/user-cart">
+              <button className="relative text-gray-600 hover:text-gray-800 transition-colors">
+                <CiShoppingCart size={24} />
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {countCart ?? 0}
+                </span>
+              </button>
+            </Link>
           </div>
         </div>
       </div>

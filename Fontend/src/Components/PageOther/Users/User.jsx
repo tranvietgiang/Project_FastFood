@@ -6,11 +6,10 @@ export default function User() {
   const navigate = useNavigate();
   const [data, setData] = useState({});
   const [getCouponCount, setCouponCount] = useState(null);
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
-
     if (!token || !user) {
       navigate("/auth/login");
       return;
@@ -39,6 +38,7 @@ export default function User() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem(`count_cart_${token}`);
     navigate("/auth/login");
   };
 
