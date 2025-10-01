@@ -140,7 +140,9 @@ Route::post('/momo/check-momo', [PaymentBuyNowController::class, 'checkMomo']);
 Route::middleware('auth:sanctum')->post('/send-bill', [PaymentBuyNowController::class, 'sendBill']);
 
 // message
+// routes/api.php
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages', [MessageController::class, 'store']);
+    Route::get('/get-customer-care', [MessageController::class, 'getCustomerCare']);
 });
