@@ -18,13 +18,13 @@ class FeatureUpdateController extends Controller
         if (!Auth::id()) {
             return response()->json([
                 "message_cart" => "Chưa đăng nhập"
-            ]);
+            ], 401);
         }
 
         if (!$productId || !$cartId || !$newQuantity) {
             return response()->json([
                 "message_cart" => "Dữ liệu bị lỗi"
-            ]);
+            ], 400);
         }
 
         $check = OrderCart::where("user_id", Auth::id())
@@ -35,7 +35,7 @@ class FeatureUpdateController extends Controller
         if (!$check) {
             return response()->json([
                 "message_cart" => "Sản phẩm không tồn tại trong giỏ hàng"
-            ]);
+            ], 404);
         }
 
         // Cập nhật số lượng

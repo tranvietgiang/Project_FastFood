@@ -37,7 +37,7 @@ export default function Call_center() {
           className={`${
             hidden
               ? "opacity-0 mt-[0px] overflow-hidden"
-              : "opacity-100 scale-100 mt-[-210px] space-y-4 transition-all duration-700 ease-in-out"
+              : "opacity-100 scale-100 mt-[-250px] space-y-4 transition-all duration-700 ease-in-out"
           }`}
         >
           {menuCall.map((e, i) => (

@@ -143,8 +143,7 @@ class FeatureDeleteController extends Controller
 
     public function cartItemDelete(Request $request)
     {
-        $productId = $request->input('product_id');
-        $cart_id = $request->input('cart_id');
+        $productId = $request->input('productId');
         $userId = Auth::id();
 
         if (!$productId || !$userId) {
@@ -159,7 +158,7 @@ class FeatureDeleteController extends Controller
 
         if (!$checkExists) {
             return response()->json([
-                "message_delete" => "Sản phẩm này không tồn tại trong giỏ hàng"
+                "message_delete" => "Sản phẩm này không tồn tại trong giỏ hàng, tải lại trang"
             ], 409);
         }
 
@@ -171,14 +170,20 @@ class FeatureDeleteController extends Controller
             return response()->json([
                 "message_delete" => "Xóa không thành công"
             ], 410);
+        } else {
+            return response()->json([
+                "success" => "success",
+                "message_success" => "Xóa thành công sản phẩm"
+            ], 200);
         }
 
-        $function = new FeatureGetDataController();
-        $result = $function->Carts();
 
-        if ($result) {
-            return response()->json($result);
-        }
+        // $function = new FeatureGetDataController();
+        // $result = $function->Carts();
+
+        // if ($result) {
+        //     return response()->json($result);
+        // }
 
         return response()->json([], 500);
     }

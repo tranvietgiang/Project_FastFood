@@ -59,7 +59,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       setLoading(false);
-      navigate("/fast.foods");
+      navigate("/fast-foods");
     } catch (error) {
       console.log("Error", error);
       if (error.response.status === 400) {

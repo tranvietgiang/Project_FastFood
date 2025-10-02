@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { CiStar, CiShoppingCart } from "react-icons/ci";
+import { CiStar } from "react-icons/ci";
 import { FaStar } from "react-icons/fa";
 import { IoIosOptions } from "react-icons/io";
 import { Link } from "react-router-dom";
-import { MdOutlineShoppingCartCheckout } from "react-icons/md";
 import { IoIosGitCompare } from "react-icons/io";
 import { AiOutlineEye } from "react-icons/ai";
 import { FiHeart } from "react-icons/fi";
@@ -12,16 +11,19 @@ import { ModelProduct } from "../../PageOther/ModelProduct";
 import HandleCompare from "../Handle/HandleCompare";
 import { HandleHeart } from "../Handle/HandleHeart";
 import HandleMessage from "../Handle/HandleMessage";
+import { HandleCartItem } from "../Handle/HandleCartItem";
 
-// Thêm className prop
 export default function GetProducts({ products, className = "" }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [messageHeart, setMessageHeart] = useState("");
+  const [message, setMessage] = useState("");
   const [openMessageHeart, setOpenMessageHeart] = useState(false);
   const [severity, setSeverity] = useState("error");
 
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+  };
   return (
     <>
       {products
@@ -45,7 +47,7 @@ export default function GetProducts({ products, className = "" }) {
                     product?.product_id ?? null
                   );
                   if (awaitMessage) {
-                    setMessageHeart(awaitMessage.message);
+                    setMessage(awaitMessage.message);
                     setSeverity(awaitMessage.success ? "success" : "error");
                     setOpenMessageHeart(true);
                   }
@@ -138,19 +140,18 @@ export default function GetProducts({ products, className = "" }) {
                   {product.percent_name > 0 ? (
                     <>
                       <span className="text-red-500 font-bold text-lg sm:text-xl block">
-                        {Number(
+                        {formatPrice(
                           product.product_price *
                             (1 - product.percent_name / 100)
-                        ).toLocaleString()}
-                        đ
+                        )}
                       </span>
                       <span className="text-gray-500 text-sm sm:text-base line-through">
-                        {Number(product.product_price).toLocaleString()}đ
+                        {formatPrice(product.product_price)}
                       </span>
                     </>
                   ) : (
                     <span className="text-red-500 font-bold text-lg sm:text-xl">
-                      {Number(product.product_price).toLocaleString()}đ
+                      {formatPrice(product.product_price)}
                     </span>
                   )}
                 </div>
@@ -174,7 +175,32 @@ export default function GetProducts({ products, className = "" }) {
                       <button className="bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors duration-200 text-xs sm:text-sm font-medium">
                         Đặt Ngay
                       </button>
-                      <button className="bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 text-xs sm:text-sm font-medium">
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault(); // chặn Link
+                          e.stopPropagation(); // chặn sự kiện lan lên Link
+
+                          const finalPrice =
+                            product.percent_name > 0
+                              ? product.product_price *
+                                (1 - product.percent_name / 100)
+                              : product.product_price;
+
+                          const messageCart = await HandleCartItem(
+                            product?.product_id ?? null,
+                            finalPrice
+                          );
+
+                          if (messageCart) {
+                            setMessage(messageCart.message);
+                            setSeverity(
+                              messageCart.success ? "success" : "error"
+                            );
+                            setOpenMessageHeart(true);
+                          }
+                        }}
+                        className="bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 text-xs sm:text-sm font-medium"
+                      >
                         Thêm Cart
                       </button>
                     </div>
@@ -198,7 +224,7 @@ export default function GetProducts({ products, className = "" }) {
       />
 
       <HandleMessage
-        message={messageHeart}
+        message={message}
         open={openMessageHeart}
         severity={severity}
         onClose={() => setOpenMessageHeart(false)}
