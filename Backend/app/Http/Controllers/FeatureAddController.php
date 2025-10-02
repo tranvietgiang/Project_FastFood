@@ -65,6 +65,7 @@ class FeatureAddController extends Controller
     public function insertCouponUser(Request $request, $copiedId)
     {
         $displayDate = $request->input("displayDate") ?? null;
+
         if (!$copiedId) {
             return response()->json(["message" => "Lỗi hệ thống"], 400);
         }
