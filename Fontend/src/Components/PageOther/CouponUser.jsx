@@ -7,7 +7,7 @@ import HandleMessage from "../Features/Handle/HandleMessage";
 import { RiErrorWarningLine } from "react-icons/ri";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
-export default function CouponPage() {
+export default function CouponUser() {
   const [getCouponList, setProduct] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -25,11 +25,18 @@ export default function CouponPage() {
       navigate("/auth/login");
       return;
     }
+    let cache_heart = [];
+    try {
+      const cached = localStorage.getItem("list_coupon");
+      if (cached) {
+        if (cache_heart) setProduct(JSON.parse(cache_heart));
+      }
+    } catch (error) {
+      console.error("Lỗi parse cache:", error);
+      cache_heart = [];
+    }
 
-    const cache_heart = JSON.parse(localStorage.getItem("list_coupon"));
-    if (cache_heart) setProduct(cache_heart);
-
-    const fetchGetHeartList = async () => {
+    const fetchGeCouponList = async () => {
       setLoading(true);
       try {
         const res = await axios.get(
@@ -47,13 +54,14 @@ export default function CouponPage() {
       }
     };
 
-    fetchGetHeartList();
+    fetchGeCouponList();
   }, [token, user_id, navigate]);
 
   const handleDelete = async (coupon_user_id) => {
     if (!token || !user_id || !coupon_user_id) return;
 
     setLoading(true);
+
     try {
       const res = await axios.post(
         `http://localhost:8000/api/delete/coupon`,
@@ -65,6 +73,9 @@ export default function CouponPage() {
           },
         }
       );
+      const clearLoading = setTimeout(() => {
+        setLoading(false); // Nên là false vì đã quá thời gian chờ
+      }, 5000);
 
       setProduct(res.data.original.data ?? []);
       localStorage.setItem(
@@ -75,6 +86,8 @@ export default function CouponPage() {
       setOpenMessageHeart(true);
       setMessageHeart("Mã giảm giá đã được xóa");
       setSeverity("success");
+
+      return clearTimeout(clearLoading);
     } catch (error) {
       setOpenMessageHeart(true);
       setSeverity("error");

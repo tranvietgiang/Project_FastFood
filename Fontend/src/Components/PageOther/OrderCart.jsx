@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { FiTrash2, FiPlus, FiMinus, FiShoppingBag } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import HandleMessage from "../Features/Handle/HandleMessage";
 
 export default function OrderCart() {
   const token = localStorage.getItem("token");
@@ -9,16 +10,24 @@ export default function OrderCart() {
   const navigate = useNavigate();
 
   const [cartItems, setCartItems] = useState([]);
-  const [userCoupon, setUserCoupon] = useState("");
+  const [userCoupon, setUserCoupon] = useState(null);
   const [getCoupon, setCoupon] = useState(null);
   const [getCouponUserList, setUserCouponList] = useState([]);
   const [finalPrice, setFinalPrice] = useState(0);
   const [confirm, setConfirm] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [priceTotal, setPriceTotal] = useState(0);
+  const [priceTotal, setPriceTotal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
   const [updatingItems, setUpdatingItems] = useState(new Set());
+  const [message, setMessage] = useState("");
+  const [openMessageHeart, setOpenMessageHeart] = useState(false);
+  // const [priceRefState, setPriceRefState] = useState(null);
+  // const [refReady, setRefReady] = useState(false);
+  const [severity, setSeverity] = useState("error");
+  const priceTotalRef = useRef();
+
+  // const [finalPriceRe, setFinalPriceRe] = useState(null);
 
   useEffect(() => {
     if (!user) navigate("/auth/login");
@@ -38,8 +47,7 @@ export default function OrderCart() {
 
       // Tính tổng dựa trên current_price
       const total = (res.data.get_data || []).reduce(
-        (sum, item) =>
-          sum + (item.current_price || item.product_price * item.cart_quantity),
+        (sum, item) => sum + item.current_price * item.cart_quantity,
         0
       );
 
@@ -60,9 +68,14 @@ export default function OrderCart() {
   // Fetch coupon list
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/get-coupon-user")
+      .get("http://localhost:8000/api/get-coupon-user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((res) => {
-        setUserCouponList(res.data.list || []);
+        setUserCouponList(res.data.list);
       })
       .catch((e) => {
         console.error("Error fetching coupons:", e);
@@ -110,7 +123,11 @@ export default function OrderCart() {
       await fetchCartItems();
     } catch (error) {
       console.error("Error updating quantity:", error);
-      alert("Có lỗi xảy ra khi cập nhật số lượng");
+      if (error.response) {
+        setMessage(error.response.data.message_cart);
+        setSeverity("error");
+        setOpenMessageHeart(true);
+      }
     } finally {
       setUpdatingItems((prev) => {
         const newSet = new Set(prev);
@@ -120,45 +137,48 @@ export default function OrderCart() {
     }
   };
 
+  // chưa code
   const removeItem = async (productId) => {
     if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?"))
       return;
 
     try {
-      await axios.post("http://localhost:8000/api/delete-cart", {
-        data: {
-          productId: productId,
+      const res = await axios.post(
+        "http://localhost:8000/api/delete-cart",
+        {
+          productId,
         },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-type": "application/json",
-        },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-type": "application/json",
+          },
+        }
+      );
 
+      setMessage(res.data.message_success);
+      setSeverity(res.data.success);
+      setOpenMessageHeart(true);
       await fetchCartItems();
       setSelectedItems((prev) => prev.filter((id) => id !== productId));
     } catch (error) {
       console.error("Error removing item:", error);
-      alert("Có lỗi xảy ra khi xóa sản phẩm");
+      if (error.response) {
+        setMessage(error.response.data.message_delete);
+        setSeverity("error");
+        setOpenMessageHeart(true);
+      }
     }
   };
 
-  const handleCheckout = () => {
-    if (selectedItems.length === 0) {
-      alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
-      return;
-    }
+  // const priceQtyRef = useCallback((node) => {
+  //   if (node !== null) {
+  //     setPriceRefState(node.textContent);
+  //     setRefReady(true);
+  //   }
+  // }, []);
 
-    // Navigate to checkout page with selected items
-    navigate("/checkout", {
-      state: {
-        selectedItems,
-        coupon: appliedCoupon,
-        discount: getCoupon,
-        finalPrice: finalPrice,
-      },
-    });
-  };
+  // console.log(priceRefState, priceQtyRef.current?.textContent);
 
   const handleCoupon = async () => {
     if (!userCoupon) return;
@@ -176,6 +196,42 @@ export default function OrderCart() {
       console.log("Error", error);
     }
   };
+
+  useEffect(() => {
+    if (userCoupon && userCoupon !== appliedCoupon) {
+      setConfirm(false);
+    }
+
+    if (userCoupon && userCoupon === appliedCoupon) {
+      setConfirm(true);
+    }
+  }, [userCoupon, appliedCoupon, finalPrice]);
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
+      return;
+    }
+
+    // Lấy các cart items đã chọn
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.includes(item.product_id)
+    );
+
+    // Lấy danh sách cart_id từ các items đã chọn
+    const cartIds = selectedCartItems.map((item) => item.cart_id);
+    // Lưu vào localStorage để chuyển trang
+    const checkoutData = {
+      totalPrice: selectedTotal,
+      cartItems: selectedCartItems,
+      cartIds: cartIds, // Gửi cart_ids
+      coupon: appliedCoupon,
+      timestamp: new Date().getTime(),
+    };
+    localStorage.setItem("orderCartData", JSON.stringify(checkoutData));
+    navigate("/cart-orders");
+  };
+
   const selectedCount = selectedItems.length;
 
   if (loading) {
@@ -295,10 +351,12 @@ export default function OrderCart() {
 
                     {/* Tổng từng sản phẩm - Sử dụng current_price */}
                     <div className="text-right font-semibold text-lg min-w-[100px]">
-                      {Number(
-                        item.current_price * item.cart_quantity
-                      ).toLocaleString()}
-                      đ
+                      <span>
+                        {Number(
+                          item.current_price * item.cart_quantity
+                        ).toLocaleString()}
+                      </span>
+                      <span>đ</span>
                     </div>
 
                     {/* Xóa */}
@@ -341,35 +399,39 @@ export default function OrderCart() {
                     >
                       <option value={null}>Chọn mã</option>
 
-                      {getCouponUserList
-                        .filter((v) => {
-                          const created = new Date(v.created_at);
-                          const a = created.toISOString().split("T")[0];
-                          const today = new Date().toISOString().split("T")[0];
-                          return (
-                            a >= today &&
-                            v.coupon_user_minimum_price <= priceTotal
-                          );
-                        })
-                        .map((e, index) => {
-                          return (
-                            <>
-                              <option
-                                className={`${userCoupon == e.coupon_user_id ? "text-red-500 font-bold" : ""}`}
-                                key={index}
-                                value={e.coupon_user_id}
-                              >
-                                <span
-                                  className={`inline-block font-bold text-lg`}
-                                >
-                                  RT{e.coupon_user_id}
-                                </span>
-                                - {e.coupon_user_name ?? ""}
-                              </option>
-                              ;
-                            </>
-                          );
-                        })}
+                      {selectedItems.length > 0
+                        ? getCouponUserList
+                            .filter((v) => {
+                              const created = new Date(v.created_at);
+                              const a = created.toISOString().split("T")[0];
+                              const today = new Date()
+                                .toISOString()
+                                .split("T")[0];
+                              return (
+                                a >= today &&
+                                v.coupon_user_minimum_price <= selectedTotal
+                              );
+                            })
+                            .map((e, index) => {
+                              return (
+                                <>
+                                  <option
+                                    className={`${userCoupon == e.coupon_user_id ? "text-red-500 font-bold" : ""}`}
+                                    key={index}
+                                    value={e.coupon_user_id}
+                                  >
+                                    <span
+                                      className={`inline-block font-bold text-lg`}
+                                    >
+                                      RT{e.coupon_user_id}
+                                    </span>
+                                    - {e.coupon_user_name ?? ""}
+                                  </option>
+                                  ;
+                                </>
+                              );
+                            })
+                        : ""}
                     </select>
                     <p>
                       {!confirm && userCoupon !== "" ? (
@@ -409,7 +471,12 @@ export default function OrderCart() {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Tổng cộng:</span>
                     <span className="text-red-500">
-                      {selectedTotal.toLocaleString()}đ
+                      <span ref={priceTotalRef}>
+                        {finalPrice
+                          ? Number(finalPrice).toLocaleString()
+                          : Number(selectedTotal).toLocaleString()}
+                      </span>
+                      <span>đ</span>
                     </span>
                   </div>
                 </div>
@@ -424,7 +491,7 @@ export default function OrderCart() {
                 </button>
 
                 <Link
-                  to="/products"
+                  to="/fast-foods"
                   className="block w-full py-3 border border-gray-300 rounded-lg text-center text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Tiếp tục mua sắm
@@ -434,6 +501,12 @@ export default function OrderCart() {
           </div>
         )}
       </div>
+      <HandleMessage
+        message={message}
+        open={openMessageHeart}
+        severity={severity}
+        onClose={() => setOpenMessageHeart(false)}
+      />
     </div>
   );
 }

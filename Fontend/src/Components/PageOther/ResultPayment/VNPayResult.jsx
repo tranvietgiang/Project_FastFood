@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader";
-
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import BillResultBuyNow from "./BillResultBuyNow";
 

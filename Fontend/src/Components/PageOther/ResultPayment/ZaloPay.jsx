@@ -1,8 +1,4 @@
 import { useEffect, useState } from "react";
-import { MdOutlineMail } from "react-icons/md";
-import { Link } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader";
-
 import axios from "axios";
 import BillResultBuyNow from "./BillResultBuyNow";
 export default function ZaloPay() {
