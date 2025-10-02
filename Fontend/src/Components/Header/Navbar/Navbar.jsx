@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { RiCustomerService2Fill } from "react-icons/ri";
 import {
   CiCircleChevDown,
   CiCircleChevLeft,

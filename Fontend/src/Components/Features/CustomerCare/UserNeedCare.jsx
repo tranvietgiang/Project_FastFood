@@ -200,7 +200,7 @@ const UserNeedCare = () => {
                           <div className="text-xs font-semibold mb-1 opacity-80">
                             {message.user_id === user_id
                               ? "Bạn"
-                              : `${setCustomerCare?.fullname || "Hỗ trợ viên"}`}
+                              : `CSKH-${setCustomerCare?.fullname || "Hỗ trợ viên"}`}
                           </div>
                           <div className="text-sm leading-relaxed">
                             {message.message}

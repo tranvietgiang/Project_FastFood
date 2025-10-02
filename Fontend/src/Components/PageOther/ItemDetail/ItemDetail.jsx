@@ -17,7 +17,6 @@ export default function ItemDetail() {
   const [getProduct, setProduct] = useState([]);
   const [error, setError] = useState("");
   const [priceDiscount, setPriceDiscount] = useState(null);
-  // const [priceVariantPrice, setPriceVariantPrice] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [drinkTogether, setDrinkTogether] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,7 +46,6 @@ export default function ItemDetail() {
 
   const reset = () => {
     setSelectVariants("");
-    // setPriceVariantPrice(null);
   };
 
   useEffect(() => {
@@ -55,7 +53,6 @@ export default function ItemDetail() {
       .get("http://localhost:8000/api/get-coupon-user")
       .then((res) => {
         setCouponExistUser(res.data.list);
-        // console.log(res.data.list);
       })
       .catch((e) => {
         console.log("error", e);
@@ -133,7 +130,6 @@ export default function ItemDetail() {
   }, []);
 
   const [noteOrder, setNoteOrder] = useState(null);
-
   const quantityRef = useRef();
   const priceRef = useRef();
   const nameRef = useRef();

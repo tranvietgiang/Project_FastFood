@@ -14,6 +14,7 @@ use App\Http\Controllers\FeatureSearchController;
 use App\Http\Controllers\PaymentBuynowController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PaymentBuyCartController;
 
 /**Auth */
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -88,7 +89,7 @@ Route::get("/enter-the-coupon/{code}", [ProductController::class, "enterTheCoupo
 Route::middleware('auth:sanctum')->post('/insert-coupon/{copiedId}', [FeatureAddController::class, 'insertCouponUser']);
 
 /* get count coupon*/
-Route::middleware("auth:sanctum")->get('/get-count-user', [FeatureGetDataController::class, 'countCoupon']);
+Route::middleware("auth:sanctum")->get('/get-coupon-user', [FeatureGetDataController::class, 'countCoupon']);
 
 /* user add heart*/
 Route::post('/insert-heart-user', [FeatureAddController::class, 'insertHeartUser']);
@@ -139,6 +140,11 @@ Route::post('/momo/check-momo', [PaymentBuyNowController::class, 'checkMomo']);
 /* user click send mail y*/
 Route::middleware('auth:sanctum')->post('/send-bill', [PaymentBuyNowController::class, 'sendBill']);
 
+/*********************************  payment buy cart          ********************/
+Route::middleware('auth:sanctum')->post('checkout/buy-cart', [PaymentBuyCartController::class, 'buyCart']);
+Route::middleware('auth:sanctum')->post('/zalo/callback-cart', [PaymentBuyCartController::class, 'checkZaloCart']);
+Route::middleware('auth:sanctum')->post('/vnpay/callback-cart', [PaymentBuyCartController::class, 'checkVnPayCart']);
+Route::middleware('auth:sanctum')->post('/momo/check-momo-cart', [PaymentBuyCartController::class, 'checkMomoCart']);
 // message
 // routes/api.php
 Route::middleware('auth:sanctum')->group(function () {

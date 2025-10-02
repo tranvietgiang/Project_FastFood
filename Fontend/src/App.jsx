@@ -20,12 +20,14 @@ import VNPayResult from "./Components/PageOther/ResultPayment/VNPayResult";
 import MomoResult from "./Components/PageOther/ResultPayment/MomoResult";
 import Above from "./Components/Footer/AboveFooter";
 import HeartPage from "./Components/PageOther/HeartPage";
-import CouponPage from "./Components/PageOther/CouponPage";
+import CouponUser from "./Components/PageOther/CouponUser";
 import OrderCart from "./Components/PageOther/OrderCart";
-import Chat from "./Components/PageOther/Chat";
-import StudentChat from "./Components/Features/CustomerCare/UserNeedCare";
-import TeacherChat from "./Components/Features/CustomerCare/CustomerCare";
-
+import UserNeedCare from "./Components/Features/CustomerCare/UserNeedCare";
+import CustomerCare from "./Components/Features/CustomerCare/CustomerCare";
+import CheckoutOrders from "./Components/PageOther/CheckoutOrders";
+import ZaloPayCart from "./Components/PageOther/ResultPayment/ZaloPayCart";
+import VNPayResultCart from "./Components/PageOther/ResultPayment/VNPayResultCart";
+import MomoResultCart from "./Components/PageOther/ResultPayment/MomoResultCart";
 function App() {
   return (
     <Router>
@@ -156,7 +158,7 @@ function App() {
             element={
               <>
                 <Header />
-                <CouponPage />
+                <CouponUser />
                 <Footer />
               </>
             }
@@ -172,20 +174,25 @@ function App() {
               </>
             }
           />
-
+          {/**buy now */}
           <Route path="/information-orders" element={<InformationOrders />} />
           <Route path="/result-zaloPay" element={<ZaloPay />} />
           <Route path="/result-vnPay" element={<VNPayResult />} />
           <Route path="/result-momo" element={<MomoResult />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/cskh" element={<TeacherChat />} />
+
+          {/**buy cart */}
+          <Route path="/cart-orders" element={<CheckoutOrders />} />
+          <Route path="/result-zaloPay-cart" element={<ZaloPayCart />} />
+          <Route path="/result-vnPay-cart" element={<VNPayResultCart />} />
+          <Route path="/result-momo-cart" element={<MomoResultCart />} />
+
+          <Route path="/cskh" element={<CustomerCare />} />
           <Route
             path="user-cskh"
             element={
               <>
                 <Header />
-                <StudentChat />
-                <Footer />
+                <UserNeedCare />
               </>
             }
           />

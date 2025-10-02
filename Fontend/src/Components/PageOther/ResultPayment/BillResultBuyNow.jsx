@@ -80,7 +80,7 @@ export default function BillResultBuyNow({ item, loading, status }) {
           )}
           <div className="mt-6 text-center">
             <Link
-              to="/fast.foods"
+              to="/fast-foods"
               className="inline-block px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
             >
               Trang chủ

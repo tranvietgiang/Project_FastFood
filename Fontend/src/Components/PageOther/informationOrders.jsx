@@ -25,13 +25,13 @@ export default function InformationOrders() {
   const nameRef = useRef();
   const QtyRef = useRef();
 
-  // localStorage.removeItem("cache_province");
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const order = localStorage.getItem("packageOrder");
-    const user = localStorage.getItem("user");
     if (user) {
-      setUser(JSON.parse(user));
+      setUser(user);
     } else {
       navigate("/auth/login");
     }
@@ -86,8 +86,15 @@ export default function InformationOrders() {
   }, [setFinalPrice, priceTotal, getCoupon, finalPrice]);
 
   useEffect(() => {
+    if (!token) return;
+
     axios
-      .get("http://localhost:8000/api/get-coupon-user")
+      .get(`http://localhost:8000/api/get-coupon-user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((res) => {
         setUserCouponList(res.data.list);
       })

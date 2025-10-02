@@ -117,7 +117,7 @@ class FeatureGetDataController extends Controller
     {
         if (!$userId) {
             return response()->json([
-                "auth" => "user-login -yet"
+                "auth" => "user-login-yet"
             ], 421);
         }
 
@@ -137,11 +137,12 @@ class FeatureGetDataController extends Controller
     public function countCoupon()
     {
         $getListCoupon = CouponUser::where("user_id", Auth::id())
-            ->orderBy("created_at", "desc")->count();
+            ->orderBy("created_at", "desc")->get();
 
-        if ($getListCoupon > 0) {
+        if ($getListCoupon->count() > 0) {
             return response()->json([
-                "count" => $getListCoupon
+                "count" => $getListCoupon->count(),
+                "list" => $getListCoupon
             ]);
         }
 
